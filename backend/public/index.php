@@ -14,11 +14,16 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 require __DIR__.'/../vendor/autoload.php';
 
 // Bootstrap Laravel and handle the request...
-/** @var Application $app */
-$app = require_once __DIR__.'/../bootstrap/app.php';
-
 try {
-    $app->handleRequest(Request::capture());
+    $request = Request::capture();
+    echo json_encode([
+        'uri' => $request->getUri(),
+        'path' => $request->path(),
+        'method' => $request->method(),
+        'script_name' => $_SERVER['SCRIPT_NAME'] ?? null,
+        'request_uri' => $_SERVER['REQUEST_URI'] ?? null,
+    ]);
+    exit;
 } catch (\Throwable $e) {
     http_response_code(500);
     echo json_encode([
