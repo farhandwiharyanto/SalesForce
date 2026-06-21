@@ -2,9 +2,9 @@
   <div class="animate-fade-in">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold text-gray-800">Deals Management</h1>
-      <button @click="createTestDeal" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
+      <button @click="showModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        <span>Create Mock Deal</span>
+        <span>Add Deal</span>
       </button>
     </div>
     
@@ -92,6 +92,66 @@
         </tbody>
       </table>
     </div>
+    <!-- Modal Form -->
+    <transition name="fade">
+      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all animate-modal-in border border-gray-100">
+          <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-900">Add New Deal</h3>
+            <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+          <form @submit.prevent="saveDeal" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <!-- Deal Details -->
+            <div class="border-b border-gray-100 pb-4 mb-4">
+              <h4 class="text-sm font-bold text-blue-600 mb-3">Deal Details</h4>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Deal Name</label>
+                  <input type="text" v-model="newDeal.name" required class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Amount (Rp)</label>
+                  <input type="number" v-model="newDeal.amount" required class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Customer Details -->
+            <div>
+              <h4 class="text-sm font-bold text-blue-600 mb-3">Customer Details</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Customer Name</label>
+                  <input type="text" v-model="newDeal.contact_name" required class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Company</label>
+                  <input type="text" v-model="newDeal.contact_company" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
+                  <input type="email" v-model="newDeal.contact_email" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Phone</label>
+                  <input type="text" v-model="newDeal.contact_phone" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" />
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 flex justify-end gap-2 border-t border-gray-100 mt-6">
+              <button type="button" @click="showModal = false" class="px-4 py-2 rounded-lg font-semibold text-gray-600 hover:bg-gray-50 transition-colors text-sm border border-transparent">Cancel</button>
+              <button type="submit" :disabled="isSaving" class="px-4 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors text-sm flex items-center gap-2">
+                <span v-if="isSaving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                Save Deal
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -103,6 +163,17 @@ import Swal from 'sweetalert2';
 
 const authStore = useAuthStore();
 const deals = ref([]);
+
+const showModal = ref(false);
+const isSaving = ref(false);
+const newDeal = ref({
+  name: '',
+  amount: null,
+  contact_name: '',
+  contact_company: '',
+  contact_email: '',
+  contact_phone: ''
+});
 
 const formatNumber = (num) => {
   return new Intl.NumberFormat('id-ID').format(num);
@@ -121,27 +192,39 @@ const fetchDeals = async () => {
   }
 };
 
-const createTestDeal = async () => {
+const saveDeal = async () => {
   try {
+    isSaving.value = true;
     let contactResponse = await api.post('/contacts', {
-      name: 'Budi Santoso',
-      email: 'budi@example.com',
-      phone: '+6281234567890',
-      company: 'PT MMS'
+      name: newDeal.value.contact_name,
+      email: newDeal.value.contact_email,
+      phone: newDeal.value.contact_phone,
+      company: newDeal.value.contact_company
     });
     
     await api.post('/deals', {
-      name: 'Cloud Sync Subscription',
-      amount: 15000000,
+      name: newDeal.value.name,
+      amount: newDeal.value.amount,
       stage: 'prospecting',
       contact_id: contactResponse.data.id
     });
     
     await fetchDeals();
-    Swal.fire('Berhasil', 'Mock Deal berhasil dibuat.', 'success');
+    showModal.value = false;
+    newDeal.value = {
+      name: '',
+      amount: null,
+      contact_name: '',
+      contact_company: '',
+      contact_email: '',
+      contact_phone: ''
+    };
+    Swal.fire('Berhasil', 'Deal berhasil dibuat.', 'success');
   } catch (error) {
     console.error('Error creating deal:', error);
     Swal.fire('Error', error.response?.data?.message || 'Failed to create deal', 'error');
+  } finally {
+    isSaving.value = false;
   }
 };
 
@@ -238,7 +321,7 @@ const markAsWon = async (id, discountStatus) => {
     Swal.fire({
       icon: 'success',
       title: 'Deal Won! 🎉',
-      text: 'Transaksi berhasil ditutup. Webhook telah ditembakkan ke sistem OrderSales.',
+      text: 'Opportunity sudah ClosedWon',
     });
   } catch (error) {
     Swal.fire('Error', error.response?.data?.message || 'Error updating deal', 'error');
@@ -249,3 +332,12 @@ onMounted(() => {
   fetchDeals();
 });
 </script>
+
+<style scoped>
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.animate-modal-in { animation: modalScale 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes modalScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+</style>
