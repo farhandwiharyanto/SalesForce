@@ -46,8 +46,9 @@ class LeadController extends Controller
         return response()->json($lead);
     }
 
-    public function destroy(Lead $lead)
+    public function destroy(Request $request, Lead $lead)
     {
+        abort_if($request->user() && !in_array($request->user()->role, ['admin', 'administrator']), 403, 'Only Admin and Administrator can delete leads.');
         $lead->delete();
         return response()->json(null, 204);
     }

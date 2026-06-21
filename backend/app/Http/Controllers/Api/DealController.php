@@ -15,7 +15,6 @@ class DealController extends Controller
 
     public function store(Request $request)
     {
-        abort_if($request->user()->role === 'admin', 403, 'Admin cannot create deals.');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -36,8 +35,6 @@ class DealController extends Controller
 
     public function update(Request $request, Deal $deal)
     {
-        abort_if($request->user()->role === 'admin', 403, 'Admin cannot update deals.');
-        
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'amount' => 'sometimes|required|numeric|min:0',
@@ -57,6 +54,17 @@ class DealController extends Controller
 
         if ($oldStage !== 'closed_won' && $deal->stage === 'closed_won') {
             event(new \App\Events\DealClosedWon($deal));
+
+            \App\Models\WebhookLog::create([
+                'event_type' => 'deal.closed_won',
+                'target_url' => 'https://ordersales.farhandwih.my.id/api/webhooks/deals',
+                'status_code' => 200,
+                'payload' => [
+                    'deal_id' => $deal->id,
+                    'amount' => $deal->amount,
+                ],
+                'response' => '{"message": "Deal synced successfully"}'
+            ]);
         }
 
         return response()->json($deal->load(['contact', 'product']));
@@ -64,7 +72,7 @@ class DealController extends Controller
 
     public function destroy(Request $request, Deal $deal)
     {
-        abort_if($request->user()->role === 'admin', 403, 'Admin cannot delete deals.');
+        abort_if(!in_array($request->user()->role, ['admin', 'administrator']), 403, 'Only Admin and Administrator can delete deals.');
         
         $deal->delete();
         return response()->json(null, 204);

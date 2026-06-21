@@ -58,6 +58,9 @@ Ketika sebuah transaksi (Deal) diubah statusnya menjadi **`closed_won`**, sistem
 Aplikasi OrderSales dapat melakukan penarikan data (*Data Pull*) *Customer* secara berkala melalui endpoint:
 `GET /api/integration/ordersales/customers`
 
+### 5. Dokumentasi Perubahan Terkini
+Berbagai penyesuaian terbaru terkait **UI Sidebar**, **RBAC Baru (Administrator)**, fitur sinkronisasi ulang (**OrderSales Logs & Retry Sync**), hingga pergantian *popup* menjadi **SweetAlert2** dapat Anda lihat selengkapnya pada file [CHANGELOG.md](file:///Users/farhandwiharyanto/SalesForce/CHANGELOG.md). File ini juga memuat *Action Items* penting yang perlu dicek sebelum merilis aplikasi ke tahap integrasi API riil.
+
 ---
 
 ## 🚀 Panduan Instalasi & Menjalankan Aplikasi

@@ -15,7 +15,6 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        abort_if($request->user() && $request->user()->role === 'admin', 403, 'Admin cannot create customers.');
 
         $validated = $request->validate([
             'nomor_sia' => 'required|string|unique:customers',
@@ -34,7 +33,6 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer)
     {
-        abort_if($request->user() && $request->user()->role === 'admin', 403, 'Admin cannot update customers.');
 
         $validated = $request->validate([
             'nomor_sia' => 'sometimes|required|string|unique:customers,nomor_sia,'.$customer->id,
@@ -48,7 +46,7 @@ class CustomerController extends Controller
 
     public function destroy(Request $request, Customer $customer)
     {
-        abort_if($request->user() && $request->user()->role === 'admin', 403, 'Admin cannot delete customers.');
+        abort_if($request->user() && !in_array($request->user()->role, ['admin', 'administrator']), 403, 'Only Admin and Administrator can delete customers.');
 
         $customer->delete();
         return response()->json(null, 204);
