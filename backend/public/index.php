@@ -14,22 +14,10 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 require __DIR__.'/../vendor/autoload.php';
 
 // Bootstrap Laravel and handle the request...
-try {
-    $request = Request::capture();
-    echo json_encode([
-        'uri' => $request->getUri(),
-        'path' => $request->path(),
-        'method' => $request->method(),
-        'script_name' => $_SERVER['SCRIPT_NAME'] ?? null,
-        'request_uri' => $_SERVER['REQUEST_URI'] ?? null,
-    ]);
-    exit;
-} catch (\Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'message' => $e->getMessage(),
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-        'trace' => $e->getTraceAsString()
-    ]);
-}
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
+
+// Vercel deployment fix: Force SCRIPT_NAME to /index.php so Laravel doesn't strip the /api prefix
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+
+$app->handleRequest(Request::capture());
