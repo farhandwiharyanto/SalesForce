@@ -1,6 +1,6 @@
 # 🏢 SalesForce (CRM & Pre-Sales Application)
 
-Proyek ini adalah sistem **Customer Relationship Management (CRM) & Pre-Sales** yang dirancang khusus untuk memfasilitasi manajemen prospek (*Leads*), manajemen kontak (*Contacts*), serta manajemen transaksi & kesepakatan (*Deals/Opportunities*).
+Proyek ini adalah sistem **Customer Relationship Management (CRM) & Pre-Sales** yang dirancang khusus untuk memfasilitasi manajemen prospek (*Leads*), manajemen kontak (*Contacts*), serta manajemen transaksi & kesepakatan (*Optys/Opportunities*).
 
 Aplikasi ini juga telah diatur untuk beroperasi sebagai ujung tombak (hulu) dari *pipeline* integrasi data perusahaan, secara otomatis mengirimkan data transaksi yang berhasil (*Closed Won*) ke sistem **OrderSales** dan **AfterSales**.
 
@@ -27,18 +27,18 @@ Sistem memiliki 3 level hak akses pengguna:
 *(Catatan: Password untuk semua akun default adalah `password123`)*
 
 ### 2. Manajemen Modul Data
-- **Deals (Opportunities):** Mengelola siklus transaksi dari *Prospecting* hingga *Closed Won / Closed Lost*.
+- **Optys (Opportunities):** Mengelola siklus transaksi dari *Prospecting* hingga *Closed Won / Closed Lost*.
 - **Customers:** Modul direktori pelanggan B2B yang menyimpan *Nomor SIA*, *Nomor Customer*, dan *Customer Name*. Tersedia endpoint khusus untuk sinkronisasi dengan aplikasi eksternal.
 - **Leads, Contacts, & Products:** Manajemen data dasar (Master Data) untuk operasional sales.
 
 ### 3. Pipeline Integrasi Otomatis (Webhook Publisher)
 Sistem ini bertindak sebagai *trigger* utama bagi aplikasi operasional lainnya di perusahaan.
-Ketika sebuah transaksi (Deal) diubah statusnya menjadi **`closed_won`**, sistem secara otomatis di *background* (*Queue/Job*) akan mengirimkan **HTTP POST (Webhook)** ke *project* OrderSales.
+Ketika sebuah transaksi (Opty) diubah statusnya menjadi **`Closed Won`**, sistem secara otomatis di *background* (*Queue/Job*) akan mengirimkan **HTTP POST (Webhook)** ke *project* OrderSales.
 
 **Format Payload Integrasi (Sesuai Standar Arsitektur):**
 ```json
 {
-  "event": "crm.deal_won",
+  "event": "crm.opty_won",
   "deal_info": {
     "opp_id": "OPP-771",
     "gross_amt": 15000000,

@@ -17,7 +17,21 @@ Dokumen ini berisi rangkuman perubahan (*update*) terbaru pada sistem CRM SalesF
 ### 3. Fitur "OrderSales Logs" & Sync Retry
 - Modul *Webhooks* diubah namanya menjadi **OrderSales Logs** di seluruh sistem (termasuk pada navigasi *sidebar* dan hak akses *user*).
 - Menambahkan fitur **"Retry Sync"** (tombol berwarna kuning) khusus untuk log sinkronisasi yang berstatus *Failed*.
-- Tombol ini memungkinkan pengguna mengirimkan ulang data pesanan dari CRM ke *Project* OrderSales tanpa harus membuat entitas *Deal* yang baru.
+- Tombol ini memungkinkan pengguna mengirimkan ulang data pesanan dari CRM ke *project* OrderSales tanpa harus membuat entitas *Deal/Opty* yang baru.
+
+### 4. Perubahan Modul Opty & Lead
+- Modul transaksi secara keseluruhan diubah terminologinya dari **Deal** menjadi **Opty** (Opportunity).
+- **Convert Lead to Opty:** Ketika proses *Convert Lead* dijalankan, sistem secara otomatis menentukan target *Opty Close Date* (3 minggu dari sekarang) dan *Customer Expected RFS Date* (1 bulan dari sekarang).
+
+### 5. Penyesuaian Modul SIA Contracts
+- **Pembaruan Formulir SIA:** Formulir *generate* SIA Contract sekarang dilengkapi dengan modal pemilihan Opty (hanya Opty berstatus *Closed Won* yang bisa dipilih).
+- **Autofill Data:** Memilih Opty secara otomatis akan menarik *Company Name* dan *Customer ID*, yang juga terhubung langsung dengan pratinjau dokumen di sebelah kanan layar.
+- **Unduh PDF Kontrak:** Mengintegrasikan fitur unduh PDF kontrak menggunakan fungsi pencetakan native (*window.print* dengan CSS `@media print`), menghindari konflik _Vite dependency_ pada Docker container.
+
+### 6. Perbaikan Stabilitas (Bug Fixes)
+- Memperbaiki isu hilangnya _State Auth_ pada saat me-refresh halaman yang diakibatkan oleh kurangnya _Endpoint_ `/me`.
+- Menambahkan _Axios Interceptor_ pada frontend untuk secara otomatis melampirkan Token *Bearer* di setiap *request* yang dilakukan ke backend, menghilangkan bug angka 0 pada *dashboard*.
+
 
 ---
 
