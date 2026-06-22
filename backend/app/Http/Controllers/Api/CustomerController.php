@@ -17,9 +17,11 @@ class CustomerController extends Controller
     {
 
         $validated = $request->validate([
-            'nomor_sia' => 'required|string|unique:customers',
-            'nomor_customer' => 'required|string|unique:customers',
+            'nomor_sia' => 'nullable|string|unique:customers',
             'customer_name' => 'required|string|max:255',
+            'status' => 'required|string|in:Registered,Active,Deactivated',
+            'email' => 'required|email|unique:customers',
+            'initial' => 'required|string|max:4',
         ]);
 
         $customer = Customer::create($validated);
@@ -35,9 +37,12 @@ class CustomerController extends Controller
     {
 
         $validated = $request->validate([
-            'nomor_sia' => 'sometimes|required|string|unique:customers,nomor_sia,'.$customer->id,
+            'nomor_sia' => 'nullable|string|unique:customers,nomor_sia,'.$customer->id,
             'nomor_customer' => 'sometimes|required|string|unique:customers,nomor_customer,'.$customer->id,
             'customer_name' => 'sometimes|required|string|max:255',
+            'status' => 'sometimes|required|string|in:Registered,Active,Deactivated',
+            'email' => 'sometimes|required|email|unique:customers,email,'.$customer->id,
+            'initial' => 'sometimes|required|string|max:4',
         ]);
 
         $customer->update($validated);

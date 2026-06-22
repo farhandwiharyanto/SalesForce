@@ -29,9 +29,9 @@
           Leads
         </router-link>
 
-        <router-link v-if="hasMenu('Deals')" to="/deals" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
+        <router-link v-if="hasMenu('Opty')" to="/optys" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
           <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          Deals
+          Opty
         </router-link>
 
         <router-link v-if="hasMenu('Products')" to="/products" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
@@ -49,7 +49,7 @@
           SIA Contracts
         </router-link>
 
-        <p v-if="hasMenu('OrderSales Logs') || hasMenu('User Management')" class="px-3 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 mt-6">Administration</p>
+        <p v-if="hasMenu('OrderSales Logs') || hasMenu('User Management') || hasMenu('Semua API')" class="px-3 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 mt-6">Administration</p>
 
         <router-link v-if="authStore.role === 'admin' && hasMenu('OrderSales Logs')" to="/webhooks" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
           <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
@@ -59,6 +59,11 @@
         <router-link v-if="authStore.role === 'admin' && hasMenu('User Management')" to="/users" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
           <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
           Users
+        </router-link>
+
+        <router-link v-if="authStore.role === 'admin' && hasMenu('Semua API')" to="/api-docs" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
+          <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          Semua API
         </router-link>
       </nav>
 
@@ -83,7 +88,7 @@
     <!-- Main Content Area Wrapper -->
     <div class="flex flex-col flex-grow w-full overflow-x-hidden min-w-0">
       <main class="flex-grow w-full" :class="{ 'p-6 md:p-10 lg:p-12': authStore.isAuthenticated }">
-        <div :class="{ 'max-w-7xl mx-auto': authStore.isAuthenticated }">
+        <div :class="{ 'w-full': authStore.isAuthenticated }">
           <router-view></router-view>
         </div>
       </main>

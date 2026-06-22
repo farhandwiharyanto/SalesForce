@@ -10,16 +10,20 @@ const users = ref([])
 const isLoading = ref(true)
 const showModal = ref(false)
 const notification = ref(null)
+const isEditing = ref(false)
+const editingUserId = ref(null)
 
 const newUser = ref({
-  name: '',
+  first_name: '',
+  last_name: '',
+  email: '',
   username: '',
   password: '',
   role: 'sales',
   menus: []
 })
 
-const availableMenus = ['Dashboard', 'Deals', 'Customers', 'Leads', 'Products', 'SIA Contracts', 'OrderSales Logs', 'User Management']
+const availableMenus = ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'SIA Contracts', 'OrderSales Logs', 'User Management', 'Semua API']
 
 const showNotification = (message, type = 'success') => {
   notification.value = { message, type }
@@ -39,17 +43,43 @@ const fetchUsers = async () => {
   }
 }
 
+const openAddModal = () => {
+  isEditing.value = false
+  editingUserId.value = null
+  newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: 'sales', menus: [] }
+  showModal.value = true
+}
+
+const openEditModal = (user) => {
+  isEditing.value = true
+  editingUserId.value = user.id
+  newUser.value = {
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    username: user.username,
+    password: '',
+    role: user.role,
+    menus: user.menus ? [...user.menus] : []
+  }
+  showModal.value = true
+}
+
 const saveUser = async () => {
   try {
-    await api.post('/users', newUser.value)
-    
-    showNotification('User successfully created!')
+    if (isEditing.value) {
+      await api.put(`/users/${editingUserId.value}`, newUser.value)
+      showNotification('User successfully updated!')
+    } else {
+      await api.post('/users', newUser.value)
+      showNotification('User successfully created!')
+    }
     
     showModal.value = false
-    newUser.value = { name: '', username: '', password: '', role: 'user', menus: [] }
+    newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: 'sales', menus: [] }
     fetchUsers()
   } catch (error) {
-    showNotification(error.response?.data?.message || 'Failed to create user', 'error')
+    showNotification(error.response?.data?.message || 'Failed to save user', 'error')
   }
 }
 
@@ -90,7 +120,7 @@ onMounted(() => {
         <p class="text-gray-500 mt-2 text-lg">Manage system access, roles, and permissions.</p>
       </div>
       <div>
-        <button @click="showModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all font-semibold text-sm flex items-center gap-2 transform hover:-translate-y-0.5">
+        <button @click="openAddModal" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-blue-200 transition-all font-semibold text-sm flex items-center gap-2 transform hover:-translate-y-0.5">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           Add New User
         </button>
@@ -117,6 +147,7 @@ onMounted(() => {
           <thead>
             <tr class="border-b border-gray-100">
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Name</th>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Email</th>
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Username</th>
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Role</th>
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Menu Access</th>
@@ -128,10 +159,13 @@ onMounted(() => {
               <td class="py-4 px-6">
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-blue-100 text-blue-700 flex items-center justify-center font-bold shadow-sm border border-blue-50">
-                    {{ user.name.charAt(0).toUpperCase() }}
+                    {{ (user.first_name || user.name || '?').charAt(0).toUpperCase() }}
                   </div>
-                  <span class="font-bold text-gray-800 text-base group-hover:text-blue-600 transition-colors">{{ user.name }}</span>
+                  <span class="font-bold text-gray-800 text-base group-hover:text-blue-600 transition-colors">{{ user.first_name }} {{ user.last_name }}</span>
                 </div>
+              </td>
+              <td class="py-4 px-6">
+                <span class="text-gray-600 text-sm font-medium">{{ user.email || '-' }}</span>
               </td>
               <td class="py-4 px-6">
                 <span class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-mono text-sm font-semibold border border-gray-200 shadow-sm">{{ user.username }}</span>
@@ -151,9 +185,14 @@ onMounted(() => {
                 </div>
               </td>
               <td class="py-4 px-6 text-right">
-                <button @click="deleteUser(user.id)" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all transform hover:scale-110 shadow-sm ml-auto" :disabled="user.id === authStore.user?.id">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                </button>
+                <div class="flex items-center justify-end gap-2">
+                  <button @click="openEditModal(user)" class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all transform hover:scale-110 shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                  </button>
+                  <button @click="deleteUser(user.id)" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all transform hover:scale-110 shadow-sm" :disabled="user.id === authStore.user?.id">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -168,7 +207,7 @@ onMounted(() => {
           
           <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 flex justify-between items-center relative overflow-hidden">
             <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-            <h3 class="text-2xl font-black text-white relative z-10 tracking-tight">Create New User</h3>
+            <h3 class="text-2xl font-black text-white relative z-10 tracking-tight">{{ isEditing ? 'Edit User' : 'Create New User' }}</h3>
             <button @click="showModal = false" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-all relative z-10">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -176,9 +215,20 @@ onMounted(() => {
 
           <form @submit.prevent="saveUser" class="p-8">
             <div class="space-y-5">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">First Name</label>
+                  <input type="text" v-model="newUser.first_name" required placeholder="John" class="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Last Name</label>
+                  <input type="text" v-model="newUser.last_name" placeholder="Doe" class="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" />
+                </div>
+              </div>
+
               <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Full Name</label>
-                <input type="text" v-model="newUser.name" required placeholder="John Doe" class="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" />
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
+                <input type="email" v-model="newUser.email" required placeholder="john.doe@example.com" class="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" />
               </div>
 
               <div>
@@ -197,8 +247,10 @@ onMounted(() => {
                   </select>
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
-                  <input type="password" v-model="newUser.password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" />
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                    Password <span v-if="isEditing" class="text-gray-400 font-normal normal-case">(Leave blank to keep current)</span>
+                  </label>
+                  <input type="password" v-model="newUser.password" :required="!isEditing" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" />
                 </div>
               </div>
 
@@ -215,7 +267,7 @@ onMounted(() => {
 
             <div class="mt-10 flex justify-end gap-3 border-t border-gray-100 pt-6">
               <button type="button" @click="showModal = false" class="px-6 py-3 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all">Cancel</button>
-              <button type="submit" class="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transform hover:-translate-y-0.5 transition-all">Save User</button>
+              <button type="submit" class="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transform hover:-translate-y-0.5 transition-all">{{ isEditing ? 'Update User' : 'Save User' }}</button>
             </div>
           </form>
         </div>

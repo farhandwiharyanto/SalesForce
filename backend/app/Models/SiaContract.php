@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class SiaContract extends Model
 {
-    protected $fillable = ['sia_number', 'deal_id', 'customer_id', 'company_name', 'status'];
+    protected $fillable = ['sia_number', 'opty_id', 'customer_id', 'company_name', 'status'];
 
-    public function deal()
+    public function opty()
     {
-        return $this->belongsTo(Deal::class);
+        return $this->belongsTo(Opty::class);
     }
 }

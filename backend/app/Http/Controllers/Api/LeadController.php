@@ -10,40 +10,101 @@ class LeadController extends Controller
 {
     public function index()
     {
-        return response()->json(Lead::latest()->get());
+        return response()->json(Lead::with(['customer', 'owner', 'product', 'updates.user'])->latest()->get());
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'company' => 'nullable|string|max:255',
-            'status' => 'nullable|string'
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255',
+            'customer_id' => 'required|exists:customers,id',
+            'owner_id' => 'required|exists:users,id',
+            'product_id' => 'required|exists:products,id',
+            'status' => 'required|string|in:Open,Contacted,Converted,Qualified,Unqualified'
         ]);
 
         $lead = Lead::create($validated);
-        return response()->json($lead, 201);
+
+        \App\Models\LeadUpdate::create([
+            'lead_id' => $lead->id,
+            'user_id' => $request->user() ? $request->user()->id : null,
+            'action' => 'created',
+            'description' => 'created the lead'
+        ]);
+
+        return response()->json($lead->load(['customer', 'owner', 'product', 'updates.user']), 201);
     }
 
     public function show(Lead $lead)
     {
-        return response()->json($lead);
+        return response()->json($lead->load(['customer', 'owner', 'product', 'updates.user']));
     }
 
     public function update(Request $request, Lead $lead)
     {
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'company' => 'nullable|string|max:255',
-            'status' => 'nullable|string'
+            'first_name' => 'sometimes|required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'email' => 'sometimes|required|email|max:255',
+            'customer_id' => 'sometimes|required|exists:customers,id',
+            'owner_id' => 'sometimes|required|exists:users,id',
+            'product_id' => 'sometimes|required|exists:products,id',
+            'status' => 'sometimes|required|string|in:Open,Contacted,Converted,Qualified,Unqualified'
         ]);
 
+        $oldStatus = $lead->status;
         $lead->update($validated);
-        return response()->json($lead);
+
+        if (isset($validated['status']) && $validated['status'] !== $oldStatus) {
+            if ($validated['status'] === 'Converted') {
+                $lead->load(['customer', 'product']);
+                
+                // 1. Create Contact (Keep this if you still use Contacts elsewhere, otherwise optional)
+                $contact = \App\Models\Contact::create([
+                    'name' => trim(($lead->first_name ?? '') . ' ' . ($lead->last_name ?? '')),
+                    'email' => $lead->email,
+                    'company' => $lead->customer ? $lead->customer->customer_name : 'Unknown',
+                    'phone' => '-'
+                ]);
+
+                // 2. Create Opty
+                $amount = $lead->product ? $lead->product->price : 0;
+                \App\Models\Opty::create([
+                    'opportunity_number' => 'POT' . rand(100000000, 999999999),
+                    'name' => trim(($lead->first_name ?? '') . ' ' . ($lead->last_name ?? '')) . ' - ' . ($lead->product ? $lead->product->name : 'Opty'),
+                    'assigned_to' => $lead->owner_id,
+                    'owner_id' => $lead->owner_id,
+                    'customer_id' => $lead->customer_id,
+                    'product_id' => $lead->product_id,
+                    'stage' => 'Prospect and Analysis',
+                    'request_type' => 'New Installation',
+                    'confidence_level' => 'PipeLine',
+                    'estimated_value_otc' => $amount,
+                    'estimated_value_mrc' => 0,
+                    'target_close_date' => now()->addWeeks(3)->toDateString(),
+                    'customer_expected_rfs' => now()->addMonth()->toDateString(),
+                    'is_converted_from_lead' => true
+                ]);
+
+                \App\Models\LeadUpdate::create([
+                    'lead_id' => $lead->id,
+                    'user_id' => $request->user() ? $request->user()->id : null,
+                    'action' => 'converted_to_opty',
+                    'description' => 'converted the lead to Opty'
+                ]);
+            } else {
+                \App\Models\LeadUpdate::create([
+                    'lead_id' => $lead->id,
+                    'user_id' => $request->user() ? $request->user()->id : null,
+                    'action' => 'status_updated',
+                    'description' => 'changed status from ' . $oldStatus . ' to ' . $validated['status']
+                ]);
+            }
+        }
+
+        return response()->json($lead->load(['customer', 'owner', 'product', 'updates.user']));
     }
 
     public function destroy(Request $request, Lead $lead)

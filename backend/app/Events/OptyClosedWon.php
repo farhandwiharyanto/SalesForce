@@ -2,19 +2,19 @@
 
 namespace App\Events;
 
-use App\Models\Deal;
+use App\Models\Opty;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class DealClosedWon
+class OptyClosedWon
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $deal;
+    public $opty;
 
-    public function __construct(Deal $deal)
+    public function __construct(Opty $opty)
     {
-        $this->deal = $deal;
+        $this->opty = $opty;
     }
 }

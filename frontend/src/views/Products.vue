@@ -6,7 +6,7 @@
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Products & Price Books</h1>
         <p class="text-gray-500 mt-1">Manage catalog and base pricing.</p>
       </div>
-      <button @click="showModal = true" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
+      <button v-if="['admin', 'administrator'].includes(authStore.user?.role)" @click="openCreateModal" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
         New Product
       </button>
@@ -32,7 +32,7 @@
           <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
           </div>
-          <span class="text-xs font-mono font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">PRD-{{ String(product.id).padStart(4, '0') }}</span>
+          <span class="text-xs font-mono font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{{ product.product_number || 'PRO-' }}</span>
         </div>
         
         <h3 class="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors line-clamp-1">{{ product.name }}</h3>
@@ -44,6 +44,9 @@
               <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Base Price</p>
               <p class="text-xl font-black text-gray-900 tracking-tight">{{ formatIDR(product.price) }}</p>
             </div>
+            <button v-if="['admin', 'administrator'].includes(authStore.user?.role)" @click="openEditModal(product)" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-sm font-bold border border-blue-100 transition-colors">
+              Edit
+            </button>
           </div>
         </div>
       </div>
@@ -63,7 +66,7 @@
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all animate-modal-in border border-gray-100">
           <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h3 class="text-lg font-bold text-gray-900">Add New Product</h3>
+            <h3 class="text-lg font-bold text-gray-900">{{ editingId ? 'Edit Product' : 'Add New Product' }}</h3>
             <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -71,24 +74,24 @@
           <form @submit.prevent="saveProduct" class="p-6 space-y-4">
             <div>
               <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Product Name</label>
-              <input type="text" v-model="newProduct.name" required class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="e.g. Enterprise Database Sync" />
+              <input type="text" v-model="form.name" required class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm" placeholder="e.g. Enterprise Database Sync" />
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Base Price (IDR)</label>
               <div class="relative">
                 <span class="absolute left-3 top-2.5 text-sm font-bold text-gray-400">Rp</span>
-                <input type="number" v-model="newProduct.price" required class="w-full bg-white border border-gray-200 rounded-lg pl-10 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm font-mono" placeholder="15000000" />
+                <input type="number" v-model="form.price" required class="w-full bg-white border border-gray-200 rounded-lg pl-10 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm font-mono" placeholder="15000000" />
               </div>
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Description</label>
-              <textarea v-model="newProduct.description" rows="3" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"></textarea>
+              <textarea v-model="form.description" rows="3" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"></textarea>
             </div>
             <div class="pt-4 flex justify-end gap-2 border-t border-gray-100 mt-6">
               <button type="button" @click="showModal = false" class="px-4 py-2 rounded-lg font-semibold text-gray-600 hover:bg-gray-50 transition-colors text-sm border border-transparent">Cancel</button>
               <button type="submit" :disabled="isSaving" class="px-4 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors text-sm flex items-center gap-2">
                 <span v-if="isSaving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                Save Product
+                {{ editingId ? 'Update Product' : 'Save Product' }}
               </button>
             </div>
           </form>
@@ -101,14 +104,17 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '../api/axios'
+import { useAuthStore } from '../stores/auth'
 
+const authStore = useAuthStore()
 const products = ref([])
 const isLoading = ref(true)
 const isSaving = ref(false)
 const showModal = ref(false)
+const editingId = ref(null)
 const notification = ref(null)
 
-const newProduct = ref({
+const form = ref({
   name: '',
   description: '',
   price: ''
@@ -139,16 +145,36 @@ const fetchProducts = async () => {
   }
 }
 
+const openCreateModal = () => {
+  editingId.value = null;
+  form.value = { name: '', description: '', price: '' };
+  showModal.value = true;
+};
+
+const openEditModal = (product) => {
+  editingId.value = product.id;
+  form.value = {
+    name: product.name,
+    description: product.description,
+    price: product.price
+  };
+  showModal.value = true;
+};
+
 const saveProduct = async () => {
   try {
     isSaving.value = true
-    await api.post('/products', newProduct.value)
-    showNotification('Product added successfully!')
+    if (editingId.value) {
+      await api.put(`/products/${editingId.value}`, form.value)
+      showNotification('Product updated successfully!')
+    } else {
+      await api.post('/products', form.value)
+      showNotification('Product added successfully!')
+    }
     showModal.value = false
-    newProduct.value = { name: '', description: '', price: '' }
     fetchProducts()
   } catch (error) {
-    showNotification(error.response?.data?.message || 'Failed to add product', 'error')
+    showNotification(error.response?.data?.message || 'Failed to save product', 'error')
   } finally {
     isSaving.value = false
   }

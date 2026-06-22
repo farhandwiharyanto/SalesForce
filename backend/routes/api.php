@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\DealController;
+use App\Http\Controllers\Api\OptyController;
 
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\AuthController;
@@ -28,11 +28,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('sia-contracts', \App\Http\Controllers\Api\SiaContractController::class)->only(['index', 'store']);
     Route::apiResource('webhook-logs', \App\Http\Controllers\Api\WebhookLogController::class)->only(['index']);
     
-    // Deals discount endpoints
-    Route::post('/deals/{deal}/discount-request', [DealController::class, 'requestDiscount']);
-    Route::post('/deals/{deal}/discount-approve', [DealController::class, 'approveDiscount']);
-    Route::post('/deals/{deal}/discount-reject', [DealController::class, 'rejectDiscount']);
+    // Optys discount endpoints
+    Route::post('/optys/{opty}/discount-request', [OptyController::class, 'requestDiscount']);
+    Route::post('/optys/{opty}/discount-approve', [OptyController::class, 'approveDiscount']);
+    Route::post('/optys/{opty}/discount-reject', [OptyController::class, 'rejectDiscount']);
     Route::post('/webhook-logs/{webhookLog}/retry', [\App\Http\Controllers\Api\WebhookLogController::class, 'retry']);
     
-    Route::apiResource('deals', DealController::class);
+    Route::apiResource('optys', OptyController::class);
 });
