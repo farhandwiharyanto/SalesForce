@@ -20,12 +20,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
+    Route::post('leads/bulk', [LeadController::class, 'bulkStore']);
+    Route::post('optys/bulk', [\App\Http\Controllers\Api\OptyController::class, 'bulkStore']);
+    Route::post('customers/bulk', [CustomerController::class, 'bulkStore']);
+    Route::post('products/bulk', [ProductController::class, 'bulkStore']);
+    Route::post('contracts/bulk', [\App\Http\Controllers\Api\ContractController::class, 'bulkStore']);
+    Route::post('service-instance-accounts/bulk', [\App\Http\Controllers\Api\ServiceInstanceAccountController::class, 'bulkStore']);
+
     Route::apiResource('leads', LeadController::class);
     Route::apiResource('contacts', ContactController::class);
     Route::apiResource('products', ProductController::class);
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('users', UserController::class);
-    Route::apiResource('sia-contracts', \App\Http\Controllers\Api\SiaContractController::class)->only(['index', 'store']);
+    Route::apiResource('contracts', \App\Http\Controllers\Api\ContractController::class);
+    Route::apiResource('service-instance-accounts', \App\Http\Controllers\Api\ServiceInstanceAccountController::class)->only(['index', 'store', 'update']);
     Route::apiResource('webhook-logs', \App\Http\Controllers\Api\WebhookLogController::class)->only(['index']);
     
     // Optys discount endpoints

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import api from '../api/axios'
 import { useAuthStore } from '../stores/auth'
 import Swal from 'sweetalert2'
@@ -23,7 +23,20 @@ const newUser = ref({
   menus: []
 })
 
-const availableMenus = ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'SIA Contracts', 'OrderSales Logs', 'User Management', 'Semua API']
+const availableMenus = ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract', 'OrderSales Logs', 'User Management', 'Semua API']
+
+const roleMenus = {
+  admin: [...availableMenus],
+  administrator: [...availableMenus],
+  pimpinan_sales: ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract'],
+  sales: ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract']
+}
+
+watch(() => newUser.value.role, (newRole, oldRole) => {
+  if (oldRole && newRole !== oldRole) {
+    newUser.value.menus = roleMenus[newRole] ? [...roleMenus[newRole]] : []
+  }
+})
 
 const showNotification = (message, type = 'success') => {
   notification.value = { message, type }
@@ -46,7 +59,7 @@ const fetchUsers = async () => {
 const openAddModal = () => {
   isEditing.value = false
   editingUserId.value = null
-  newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: 'sales', menus: [] }
+  newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: 'sales', menus: [...roleMenus['sales']] }
   showModal.value = true
 }
 
@@ -60,7 +73,7 @@ const openEditModal = (user) => {
     username: user.username,
     password: '',
     role: user.role,
-    menus: user.menus ? [...user.menus] : []
+    menus: user.menus && user.menus.length > 0 ? [...user.menus] : (roleMenus[user.role] ? [...roleMenus[user.role]] : [])
   }
   showModal.value = true
 }

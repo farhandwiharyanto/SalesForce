@@ -6,10 +6,16 @@
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Products & Price Books</h1>
         <p class="text-gray-500 mt-1">Manage catalog and base pricing.</p>
       </div>
-      <button v-if="['admin', 'administrator'].includes(authStore.user?.role)" @click="openCreateModal" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        New Product
-      </button>
+      <div class="flex items-center gap-3">
+        <button v-if="['admin', 'administrator'].includes(authStore.user?.role)" @click="showImportModal = true" class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl font-bold shadow-sm transition-all flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          Import
+        </button>
+        <button v-if="['admin', 'administrator'].includes(authStore.user?.role)" @click="openCreateModal" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          New Product
+        </button>
+      </div>
     </div>
 
     <!-- Notification -->
@@ -98,6 +104,18 @@
         </div>
       </div>
     </transition>
+
+    <ImportModal 
+      :show="showImportModal"
+      moduleName="Products"
+      :columns="['Name', 'Description', 'Price', 'Product Number']"
+      :requiredColumns="['Name', 'Price']"
+      :sampleRow="['Enterprise License', '1 Year Subscription for 50 Users', '5000000', 'PRD-0042']"
+      apiEndpoint="/products/bulk"
+      @close="showImportModal = false"
+      @import-success="onImportSuccess"
+      @import-error="onImportError"
+    />
   </div>
 </template>
 
@@ -105,11 +123,24 @@
 import { ref, onMounted } from 'vue'
 import api from '../api/axios'
 import { useAuthStore } from '../stores/auth'
+import ImportModal from '../components/ImportModal.vue'
 
 const authStore = useAuthStore()
 const products = ref([])
 const isLoading = ref(true)
 const isSaving = ref(false)
+
+const showImportModal = ref(false)
+
+const onImportSuccess = (msg) => {
+  showNotification(msg, 'success')
+  fetchProducts()
+}
+
+const onImportError = (msg) => {
+  showNotification(msg, 'error')
+}
+
 const showModal = ref(false)
 const editingId = ref(null)
 const notification = ref(null)

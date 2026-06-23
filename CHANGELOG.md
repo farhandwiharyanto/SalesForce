@@ -33,6 +33,12 @@ Dokumen ini berisi rangkuman perubahan (*update*) terbaru pada sistem CRM SalesF
 - Menambahkan _Axios Interceptor_ pada frontend untuk secara otomatis melampirkan Token *Bearer* di setiap *request* yang dilakukan ke backend, menghilangkan bug angka 0 pada *dashboard*.
 
 
+### 7. Perombakan Modul Bulk Import & User Management
+- **Progress Tracker Modal Popup:** Mengubah indikator *loading* bawaan menjadi *Modal UI Glassmorphism* yang memiliki *circular progress bar*, penghitung persentase, serta mini terminal untuk *log* secara *real-time* ketika memproses CSV secara sekuensial (baris per baris).
+- **Perbaikan Bug Number Formatting:** Memperbaiki kerentanan pada konversi angka (*price/amount*) di *backend* akibat karakter koma (`,`) pemisah ribuan dari file CSV Excel yang sebelumnya terpotong.
+- **Perbaikan Bug Date Formatting:** Memperbaiki sistem *parsing* tanggal (dari format `d/m/y` Excel, contoh: `24/06/26`) dengan otomatis menormalisasinya menjadi format aman agar *Laravel Carbon* tidak menghasilkan *Error 500*.
+- **Auto-Sync Hak Akses User:** Menu pada fitur *User Management* sekarang memiliki fitur sinkronisasi otomatis (*watch state*). Ketika *Role* diubah (misal dari Admin ke Sales), *checkbox* akses menu (termasuk *Service Instance Account* dan *Contract*) akan otomatis menyesuaikan diri (tercentang) sesuai dengan kewenangan masing-masing jabatan.
+
 ---
 
 ## ⚠️ Tindakan Selanjutnya (Action Items to Verify)

@@ -113,4 +113,45 @@ class LeadController extends Controller
         $lead->delete();
         return response()->json(null, 204);
     }
+
+    public function bulkStore(Request $request)
+    {
+        $data = $request->input('data');
+        if (!is_array($data) || empty($data)) {
+            return response()->json(['message' => 'No data provided'], 400);
+        }
+
+        $inserted = 0;
+        foreach ($data as $item) {
+            // Map CSV to fields
+            $first_name = $item['First Name'] ?? null;
+            $last_name = $item['Last Name'] ?? null;
+            $email = $item['Email'] ?? null;
+            $status = $item['Status'] ?? 'New';
+            $customer_id = $item['Customer ID'] ?? null;
+            $owner_id = $item['Owner ID'] ?? null;
+            $product_id = $item['Product ID'] ?? null;
+
+            if ($first_name && $last_name && $email) {
+                // Generate lead number
+                $year = date('Y');
+                $count = \App\Models\Lead::where('lead_number', 'like', "LD-{$year}%")->count() + 1;
+                $leadNumber = "LD-{$year}" . str_pad($count, 3, '0', STR_PAD_LEFT);
+
+                Lead::create([
+                    'lead_number' => $leadNumber,
+                    'first_name' => $first_name,
+                    'last_name' => $last_name,
+                    'email' => $email,
+                    'status' => $status,
+                    'customer_id' => $customer_id ?: null,
+                    'owner_id' => $owner_id ?: null,
+                    'product_id' => $product_id ?: null,
+                ]);
+                $inserted++;
+            }
+        }
+
+        return response()->json(['message' => "Successfully imported {$inserted} leads."]);
+    }
 }

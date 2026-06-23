@@ -4,7 +4,8 @@ import Opty from '../views/Opty.vue';
 import Customers from '../views/Customers.vue';
 import Leads from '../views/Leads.vue';
 import Products from '../views/Products.vue';
-import SiaContracts from '../views/SiaContracts.vue';
+import ServiceInstanceAccounts from '../views/ServiceInstanceAccounts.vue';
+import Contracts from '../views/Contracts.vue';
 import Webhooks from '../views/Webhooks.vue';
 import Login from '../views/Login.vue';
 import Users from '../views/Users.vue';
@@ -43,9 +44,21 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
-        path: '/sia-contracts',
-        name: 'SiaContracts',
-        component: SiaContracts,
+        path: '/service-instance-accounts',
+        name: 'ServiceInstanceAccounts',
+        component: ServiceInstanceAccounts,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/contracts',
+        name: 'Contracts',
+        component: Contracts,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/contracts/:id',
+        name: 'ContractDetail',
+        component: () => import('../views/ContractDetail.vue'),
         meta: { requiresAuth: true }
     },
     {

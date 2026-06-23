@@ -17,7 +17,7 @@
 
       <!-- Menus -->
       <nav class="flex-grow p-4 flex flex-col gap-1.5 overflow-y-auto">
-        <p class="px-3 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 mt-2">Main Menu</p>
+        <p class="px-3 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 mt-2">Main Utama</p>
         
         <router-link v-if="hasMenu('Dashboard')" to="/" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
           <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
@@ -44,9 +44,14 @@
           Customers
         </router-link>
 
-        <router-link v-if="hasMenu('SIA Contracts')" to="/sia-contracts" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
+        <router-link v-if="hasMenu('Service Instance Account')" to="/service-instance-accounts" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
           <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          SIA Contracts
+          Service Instance Account
+        </router-link>
+
+        <router-link v-if="hasMenu('Contract')" to="/contracts" class="px-4 py-3 rounded-xl text-sm font-semibold transition-all text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3" active-class="bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50">
+          <svg class="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+          Contract
         </router-link>
 
         <p v-if="hasMenu('OrderSales Logs') || hasMenu('User Management') || hasMenu('Semua API')" class="px-3 text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 mt-6">Administration</p>

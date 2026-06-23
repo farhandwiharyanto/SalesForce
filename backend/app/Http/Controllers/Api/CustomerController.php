@@ -56,4 +56,37 @@ class CustomerController extends Controller
         $customer->delete();
         return response()->json(null, 204);
     }
+
+    public function bulkStore(Request $request)
+    {
+        $data = $request->input('data');
+        if (!is_array($data) || empty($data)) {
+            return response()->json(['message' => 'No data provided'], 400);
+        }
+
+        $inserted = 0;
+        foreach ($data as $item) {
+            $customerName = $item['Customer Name'] ?? null;
+            $email = $item['Email'] ?? null;
+            
+            if ($customerName && $email) {
+                // Generate numbers
+                $initial = $item['Initial'] ?? strtoupper(substr($customerName, 0, 4));
+                $customerId = $item['Customer ID'] ?? str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+                $siaNumber = $item['SIA Number'] ?? 'SIA-' . $customerId;
+
+                Customer::create([
+                    'nomor_sia' => $siaNumber,
+                    'nomor_customer' => $customerId,
+                    'customer_name' => $customerName,
+                    'status' => $item['Status'] ?? 'Active',
+                    'email' => $email,
+                    'initial' => $initial,
+                ]);
+                $inserted++;
+            }
+        }
+
+        return response()->json(['message' => "Successfully imported {$inserted} customers."]);
+    }
 }

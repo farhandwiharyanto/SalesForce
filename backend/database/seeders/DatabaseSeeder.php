@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
             'username' => 'admin',
             'role' => 'admin',
             'password' => Hash::make('password'),
-            'menus' => ['Dashboard', 'Optys', 'Customers', 'Leads', 'Products', 'SIA Contracts', 'OrderSales Logs', 'User Management']
+            'menus' => ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract', 'OrderSales Logs', 'User Management', 'Semua API']
         ]);
 
         User::create([
@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
             'username' => 'pimpinan_sales',
             'role' => 'pimpinan_sales',
             'password' => Hash::make('password'),
-            'menus' => ['Dashboard', 'Optys', 'Customers', 'Leads', 'Products', 'SIA Contracts']
+            'menus' => ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract']
         ]);
 
         User::create([
@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
             'username' => 'sales',
             'role' => 'sales',
             'password' => Hash::make('password'),
-            'menus' => ['Dashboard', 'Optys', 'Customers', 'Leads', 'Products']
+            'menus' => ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products']
         ]);
     }
 }

@@ -59,7 +59,7 @@ Aplikasi OrderSales dapat melakukan penarikan data (*Data Pull*) *Customer* seca
 `GET /api/integration/ordersales/customers`
 
 ### 5. Dokumentasi Perubahan Terkini
-Berbagai penyesuaian terbaru terkait **UI Sidebar**, **RBAC Baru (Administrator)**, fitur sinkronisasi ulang (**OrderSales Logs & Retry Sync**), hingga pergantian *popup* menjadi **SweetAlert2** dapat Anda lihat selengkapnya pada file [CHANGELOG.md](file:///Users/farhandwiharyanto/SalesForce/CHANGELOG.md). File ini juga memuat *Action Items* penting yang perlu dicek sebelum merilis aplikasi ke tahap integrasi API riil.
+Berbagai penyesuaian terbaru terkait **UI Sidebar**, **RBAC Baru (Administrator & Auto-Sync)**, fitur **Bulk Import CSV dengan Real-Time Progress Tracker**, fitur sinkronisasi ulang (**OrderSales Logs & Retry Sync**), hingga pergantian *popup* menjadi **SweetAlert2** dapat Anda lihat selengkapnya secara mendetail pada file [CHANGELOG.md](file:///Users/farhandwiharyanto/salesfore_development/SalesForce/CHANGELOG.md). File ini juga memuat *Action Items* penting yang perlu dicek sebelum merilis aplikasi ke tahap integrasi API riil.
 
 ---
 

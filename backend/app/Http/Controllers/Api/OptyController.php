@@ -136,4 +136,63 @@ class OptyController extends Controller
 
         return response()->json($opty->load(['customer', 'product', 'assignee', 'owner']));
     }
+
+    public function bulkStore(Request $request)
+    {
+        $data = $request->input('data');
+        if (!is_array($data) || empty($data)) {
+            return response()->json(['message' => 'No data provided'], 400);
+        }
+
+        $inserted = 0;
+        foreach ($data as $item) {
+            $name = $item['Name'] ?? null;
+            $target_close_date = $item['Target Close Date'] ?? null;
+            
+            if ($name && $target_close_date) {
+                // Generate opty number
+                $year = date('Y');
+                $count = \App\Models\Opty::where('opportunity_number', 'like', "OPTY-{$year}%")->count() + 1;
+                $opportunityNumber = "OPTY-{$year}" . str_pad($count, 3, '0', STR_PAD_LEFT);
+
+                $targetCloseDateParsed = date('Y-m-d');
+                if ($target_close_date) {
+                    try {
+                        $targetCloseDateParsed = \Carbon\Carbon::parse(str_replace('/', '-', $target_close_date))->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $targetCloseDateParsed = date('Y-m-d');
+                    }
+                }
+
+                $rfsDateStr = $item['Customer RFS Date'] ?? $target_close_date;
+                $rfsDateParsed = $targetCloseDateParsed;
+                if ($rfsDateStr) {
+                    try {
+                        $rfsDateParsed = \Carbon\Carbon::parse(str_replace('/', '-', $rfsDateStr))->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $rfsDateParsed = $targetCloseDateParsed;
+                    }
+                }
+
+                Opty::create([
+                    'opportunity_number' => $item['Opportunity Number'] ?? $opportunityNumber,
+                    'name' => $name,
+                    'assigned_to' => $item['Assigned To (User ID)'] ?? null,
+                    'owner_id' => $item['Owner ID'] ?? null,
+                    'customer_id' => $item['Customer ID'] ?? null,
+                    'product_id' => $item['Product ID'] ?? null,
+                    'target_close_date' => $targetCloseDateParsed,
+                    'customer_expected_rfs' => $rfsDateParsed,
+                    'request_type' => $item['Request Type'] ?? 'New Installation',
+                    'stage' => $item['Stage'] ?? 'Discovery',
+                    'confidence_level' => $item['Confidence Level'] ?? 'Low',
+                    'estimated_value_otc' => floatval(str_replace(',', '', $item['Estimated Value OTC'] ?? 0)),
+                    'estimated_value_mrc' => floatval(str_replace(',', '', $item['Estimated Value MRC'] ?? 0)),
+                ]);
+                $inserted++;
+            }
+        }
+
+        return response()->json(['message' => "Successfully imported {$inserted} opportunities."]);
+    }
 }

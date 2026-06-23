@@ -2,10 +2,16 @@
   <div class="animate-fade-in">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold text-gray-800">Customers Directory</h1>
-      <button v-if="['admin', 'administrator'].includes(authStore.user?.role)" @click="showCreateForm = true" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        <span>Add Customer</span>
-      </button>
+      <div class="flex items-center gap-3">
+        <button v-if="['admin', 'administrator'].includes(authStore.user?.role)" @click="showImportModal = true" class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl font-bold shadow-sm transition-all flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          Import
+        </button>
+        <button v-if="['admin', 'administrator'].includes(authStore.user?.role)" @click="showCreateForm = true" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          <span>Add Customer</span>
+        </button>
+      </div>
     </div>
 
     <!-- Create/Edit Form Modal -->
@@ -97,6 +103,24 @@
       </table>
     </div>
 
+    <!-- Notification Toast -->
+    <div v-if="notification" class="fixed bottom-6 right-6 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 font-bold text-white animate-slide-up" :class="notification.type === 'error' ? 'bg-red-600' : 'bg-green-600'">
+      <svg v-if="notification.type === 'success'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      {{ notification.message }}
+    </div>
+
+    <ImportModal 
+      :show="showImportModal"
+      moduleName="Customers"
+      :columns="['Customer Name', 'Email', 'Initial', 'Customer ID', 'SIA Number', 'Status']"
+      :requiredColumns="['Customer Name', 'Email']"
+      :sampleRow="['Acme Corporation', 'contact@acme.com', 'ACME', '551', 'SIA-551', 'Active']"
+      apiEndpoint="/customers/bulk"
+      @close="showImportModal = false"
+      @import-success="onImportSuccess"
+      @import-error="onImportError"
+    />
   </div>
 </template>
 
@@ -104,12 +128,30 @@
 import { ref, onMounted } from 'vue';
 import api from '../api/axios';
 import { useAuthStore } from '../stores/auth';
+import ImportModal from '../components/ImportModal.vue';
 import Swal from 'sweetalert2';
 
 const authStore = useAuthStore();
 const customers = ref([]);
 const showCreateForm = ref(false);
 const showEditForm = ref(false);
+const notification = ref(null);
+const showImportModal = ref(false);
+
+const showNotification = (msg, type = 'success') => {
+  notification.value = { message: msg, type };
+  setTimeout(() => { notification.value = null }, 3000);
+}
+
+const onImportSuccess = (msg) => {
+  showNotification(msg, 'success');
+  fetchCustomers();
+};
+
+const onImportError = (msg) => {
+  showNotification(msg, 'error');
+};
+
 const editingId = ref(null);
 const form = ref({
   customer_name: '',

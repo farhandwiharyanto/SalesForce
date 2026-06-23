@@ -48,4 +48,32 @@ class ProductController extends Controller
         $product->delete();
         return response()->json(null, 204);
     }
+
+    public function bulkStore(Request $request)
+    {
+        $data = $request->input('data');
+        if (!is_array($data) || empty($data)) {
+            return response()->json(['message' => 'No data provided'], 400);
+        }
+
+        $inserted = 0;
+        foreach ($data as $item) {
+            $name = $item['Name'] ?? null;
+            if ($name) {
+                // Generate product number
+                $count = \App\Models\Product::count() + 1;
+                $productNumber = $item['Product Number'] ?? 'PRD-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+
+                Product::create([
+                    'product_number' => $productNumber,
+                    'name' => $name,
+                    'description' => $item['Description'] ?? '',
+                    'price' => floatval(str_replace(',', '', $item['Price'] ?? 0)),
+                ]);
+                $inserted++;
+            }
+        }
+
+        return response()->json(['message' => "Successfully imported {$inserted} products."]);
+    }
 }

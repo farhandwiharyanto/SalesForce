@@ -3,10 +3,16 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Opty Management</h1>
-      <button @click="openAddModal" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        <span>Add Opty</span>
-      </button>
+      <div class="flex items-center gap-3">
+        <button @click="showImportModal = true" class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl font-bold shadow-sm transition-all flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          Import
+        </button>
+        <button @click="openAddModal" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-md transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          <span>Add Opty</span>
+        </button>
+      </div>
     </div>
     
     <!-- Notification -->
@@ -77,6 +83,11 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right flex justify-end gap-2">
+                <button v-if="opty.stage === 'Closed Won'" @click="generateSia(opty)" :disabled="isGeneratingSia === opty.id" class="text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors border border-green-200 shadow-sm inline-flex items-center gap-1 disabled:opacity-50">
+                  <span v-if="isGeneratingSia === opty.id" class="w-3 h-3 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin"></span>
+                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                  Generate SIA
+                </button>
                 <button @click="openEditModal(opty)" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors border border-blue-200 shadow-sm inline-flex items-center">
                   Edit
                 </button>
@@ -303,22 +314,51 @@
         </div>
       </div>
     </transition>
+
+    <ImportModal 
+      :show="showImportModal"
+      moduleName="Opty"
+      :columns="['Opportunity Number', 'Name', 'Target Close Date', 'Stage', 'Confidence Level', 'Estimated Value OTC', 'Estimated Value MRC', 'Customer ID', 'Assigned To (User ID)', 'Owner ID', 'Product ID', 'Request Type']"
+      :requiredColumns="['Name', 'Target Close Date']"
+      :sampleRow="['OPTY-2026001', 'Q3 Software Renewal', '2026-09-30', 'Discovery', 'Medium', '15000000', '2500000', '12', '3', '1', '5', 'New Installation']"
+      apiEndpoint="/optys/bulk"
+      @close="showImportModal = false"
+      @import-success="onImportSuccess"
+      @import-error="onImportError"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import api from '../api/axios';
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../api/axios'
+import ImportModal from '../components/ImportModal.vue';
 import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
 const optys = ref([]);
 const customers = ref([]);
-const users = ref([]);
+const users = ref([])
+const showImportModal = ref(false)
+
+const onImportSuccess = (msg) => {
+  showNotification(msg, 'success')
+  fetchData()
+}
+
+const onImportError = (msg) => {
+  showNotification(msg, 'error')
+}
+
+const formatCurrency = (val) => {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(val || 0);
+};
 
 const isLoading = ref(true);
 const showModal = ref(false);
 const isSaving = ref(false);
+const isGeneratingSia = ref(null);
 const notification = ref(null);
 const editingId = ref(null);
 
@@ -471,6 +511,32 @@ const saveOpty = async () => {
     showNotification(error.response?.data?.message || 'Failed to save opty', 'error');
   } finally {
     isSaving.value = false;
+  }
+};
+
+const generateSia = async (opty) => {
+  if (!opty.customer_id) {
+    showNotification('Opty must have a customer to generate SIA.', 'error');
+    return;
+  }
+  
+  if (!confirm(`Are you sure you want to generate a Service Instance Account for Opty #${opty.opportunity_number}?`)) {
+    return;
+  }
+
+  try {
+    isGeneratingSia.value = opty.id;
+    await api.post('/service-instance-accounts', {
+      opty_id: opty.id,
+      customer_id: String(opty.customer_id).padStart(3, '0'),
+      company_name: opty.customer?.customer_name || 'Unknown Company'
+    });
+    showNotification('Service Instance Account Generated successfully!');
+  } catch (error) {
+    console.error('Error generating SIA:', error);
+    showNotification(error.response?.data?.message || 'Failed to generate SIA', 'error');
+  } finally {
+    isGeneratingSia.value = null;
   }
 };
 
