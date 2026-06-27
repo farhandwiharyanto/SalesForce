@@ -6,10 +6,12 @@ use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OptyController;
+use App\Http\Controllers\Api\ActivityController;
 
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RoleController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -41,6 +43,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/optys/{opty}/discount-approve', [OptyController::class, 'approveDiscount']);
     Route::post('/optys/{opty}/discount-reject', [OptyController::class, 'rejectDiscount']);
     Route::post('/webhook-logs/{webhookLog}/retry', [\App\Http\Controllers\Api\WebhookLogController::class, 'retry']);
+    
+    Route::get('/activities', [ActivityController::class, 'index']);
+    Route::get('/login-histories', [\App\Http\Controllers\Api\LoginHistoryController::class, 'index']);
+    
+    Route::get('/roles/{role}/privileges', [RoleController::class, 'getPrivileges']);
+    Route::put('/roles/{role}/privileges', [RoleController::class, 'updatePrivileges']);
     
     Route::apiResource('optys', OptyController::class);
 });

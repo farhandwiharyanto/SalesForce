@@ -158,54 +158,43 @@ onMounted(() => {
       <div class="overflow-x-auto p-4" v-else>
         <table class="min-w-full">
           <thead>
-            <tr class="border-b border-gray-100">
-              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Name</th>
-              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Email</th>
-              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Username</th>
-              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Role</th>
-              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 uppercase tracking-widest">Menu Access</th>
-              <th class="py-4 px-6 text-right text-xs font-extrabold text-gray-400 uppercase tracking-widest">Actions</th>
-            </tr>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600 flex items-center gap-1">⬍ Name</th>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Email</th>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Role</th>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ User Name</th>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Other Email</th>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Admin</th>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Office Phone</th>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr v-for="user in users" :key="user.id" class="group hover:bg-gray-50/50 transition-colors">
-              <td class="py-4 px-6">
-                <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-blue-100 text-blue-700 flex items-center justify-center font-bold shadow-sm border border-blue-50">
-                    {{ (user.first_name || user.name || '?').charAt(0).toUpperCase() }}
+              <td class="py-2 px-6">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
                   </div>
-                  <span class="font-bold text-gray-800 text-base group-hover:text-blue-600 transition-colors">{{ user.first_name }} {{ user.last_name }}</span>
+                  <div class="flex flex-col">
+                    <router-link :to="`/users/${user.id}`" class="font-bold text-blue-600 text-[13px] uppercase tracking-wide cursor-pointer hover:underline">{{ user.first_name }} {{ user.last_name }}</router-link>
+                  </div>
                 </div>
               </td>
-              <td class="py-4 px-6">
-                <span class="text-gray-600 text-sm font-medium">{{ user.email || '-' }}</span>
+              <td class="py-2 px-6">
+                <span class="text-gray-600 text-[13px]">{{ user.email || '-' }}</span>
               </td>
-              <td class="py-4 px-6">
-                <span class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-mono text-sm font-semibold border border-gray-200 shadow-sm">{{ user.username }}</span>
+              <td class="py-2 px-6">
+                <router-link :to="`/roles/edit/${user.role}`" class="text-blue-600 text-[13px] font-semibold uppercase hover:underline">{{ user.role === 'pimpinan_sales' ? 'Pimpinan Sales' : user.role }}</router-link>
               </td>
-              <td class="py-4 px-6">
-                <span class="px-3.5 py-1.5 text-xs font-bold rounded-full border shadow-sm uppercase tracking-wide"
-                  :class="user.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-green-50 text-green-700 border-green-200'">
-                  {{ user.role }}
-                </span>
+              <td class="py-2 px-6">
+                <span class="text-gray-700 text-[13px] uppercase">{{ user.username }}</span>
               </td>
-              <td class="py-4 px-6">
-                <div class="flex flex-wrap gap-2">
-                  <span v-for="menu in user.menus" :key="menu" class="bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                    {{ menu }}
-                  </span>
-                  <span v-if="!user.menus || user.menus.length === 0" class="text-gray-400 italic text-sm font-medium">No access</span>
-                </div>
+              <td class="py-2 px-6">
+                <span class="text-gray-500 text-xs"></span>
               </td>
-              <td class="py-4 px-6 text-right">
-                <div class="flex items-center justify-end gap-2">
-                  <button @click="openEditModal(user)" class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all transform hover:scale-110 shadow-sm">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                  </button>
-                  <button @click="deleteUser(user.id)" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all transform hover:scale-110 shadow-sm" :disabled="user.id === authStore.user?.id">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  </button>
-                </div>
+              <td class="py-2 px-6">
+                <span class="text-gray-700 text-[13px]">{{ user.role === 'admin' ? 'Yes' : 'No' }}</span>
+              </td>
+              <td class="py-2 px-6">
+                <span class="text-gray-500 text-xs"></span>
               </td>
             </tr>
           </tbody>

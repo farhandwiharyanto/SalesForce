@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sia_contracts', function (Blueprint $table) {
+        Schema::create('service_instance_accounts', function (Blueprint $table) {
             $table->id();
             $table->string('sia_number')->unique();
-            $table->foreignId('deal_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('deal_id')->constrained('opty')->cascadeOnDelete();
             $table->string('customer_id'); // We'll store formatted string like "123"
             $table->string('company_name');
-            $table->string('status')->default('generated');
+            $table->string('billing_account_number')->nullable();
+            $table->unsignedBigInteger('contract_id')->nullable();
+            $table->string('status')->default('Registered');
             $table->timestamps();
         });
     }
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sia_contracts');
+        Schema::dropIfExists('service_instance_accounts');
     }
 };

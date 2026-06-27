@@ -9,7 +9,12 @@ import Contracts from '../views/Contracts.vue';
 import Webhooks from '../views/Webhooks.vue';
 import Login from '../views/Login.vue';
 import Users from '../views/Users.vue';
+import UserDetail from '../views/UserDetail.vue';
+import Roles from '../views/Roles.vue';
+import EditRole from '../views/EditRole.vue';
+import UserHistory from '../views/UserHistory.vue';
 import ApiDocs from '../views/ApiDocs.vue';
+import Activities from '../views/Activities.vue';
 import { useAuthStore } from '../stores/auth';
 
 const routes = [
@@ -23,6 +28,36 @@ const routes = [
         path: '/users',
         name: 'Users',
         component: Users,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/users/:id',
+        name: 'UserDetail',
+        component: UserDetail,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/roles',
+        name: 'Roles',
+        component: Roles,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/roles/add',
+        name: 'AddRole',
+        component: EditRole,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/roles/edit/:roleName',
+        name: 'EditRole',
+        component: EditRole,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/user-history',
+        name: 'UserHistory',
+        component: UserHistory,
         meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
@@ -95,6 +130,12 @@ const routes = [
         path: '/api-docs',
         name: 'ApiDocs',
         component: ApiDocs,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/activities',
+        name: 'Activities',
+        component: Activities,
         meta: { requiresAuth: true, requiresAdmin: true }
     }
 ];

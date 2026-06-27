@@ -85,6 +85,7 @@ const handleLogin = async () => {
     loading.value = true;
     error.value = '';
     await authStore.login(username.value, password.value);
+    sessionStorage.setItem('showWelcomeModal', 'true');
     router.push('/');
   } catch (err) {
     error.value = err.response?.data?.message || 'Invalid username or password.';

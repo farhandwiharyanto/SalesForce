@@ -9,6 +9,22 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => !!state.token,
     role: (state) => state.user?.role || null,
+    hasMenu: (state) => (menuName) => {
+      if (!state.user || !state.user.menus) return false;
+      if (typeof state.user.menus[0] === 'string') {
+        return state.user.menus.includes(menuName);
+      }
+      const menu = state.user.menus.find(m => m.name === menuName);
+      return menu ? menu.view : false;
+    },
+    hasAction: (state) => (menuName, action) => {
+      if (!state.user || !state.user.menus) return false;
+      if (typeof state.user.menus[0] === 'string') {
+        return state.user.menus.includes(menuName);
+      }
+      const menu = state.user.menus.find(m => m.name === menuName);
+      return menu ? !!menu[action] : false;
+    }
   },
   actions: {
     async login(username, password) {
