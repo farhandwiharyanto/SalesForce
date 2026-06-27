@@ -17,13 +17,21 @@
         </select>
       </div>
       <div class="flex items-center gap-4">
-        <span class="text-sm text-gray-500">1 to {{ filteredHistories.length }} of {{ filteredHistories.length }}</span>
+        <span class="text-sm text-gray-500">{{ startIndex }} to {{ endIndex }} of {{ totalItems }}</span>
         <div class="flex gap-1">
-          <button class="p-1 border border-gray-200 rounded text-gray-400 cursor-not-allowed">
+          <button 
+            @click="currentPage > 1 ? currentPage-- : null"
+            :class="['p-1 border border-gray-200 rounded', currentPage > 1 ? 'text-gray-600 hover:bg-gray-50' : 'text-gray-400 cursor-not-allowed']"
+            :disabled="currentPage === 1"
+          >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
           </button>
-          <button class="p-1 border border-gray-200 rounded text-gray-600 hover:bg-gray-50">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <button 
+            @click="currentPage < totalPages ? currentPage++ : null"
+            :class="['p-1 border border-gray-200 rounded', currentPage < totalPages ? 'text-gray-600 hover:bg-gray-50' : 'text-gray-400 cursor-not-allowed']"
+            :disabled="currentPage === totalPages"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
       </div>
@@ -50,7 +58,7 @@
                 <tr v-else-if="filteredHistories.length === 0" class="border-b border-gray-100">
                   <td colspan="5" class="py-8 text-center text-gray-400">No login history found.</td>
                 </tr>
-                <tr v-for="history in filteredHistories" :key="history.id" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors group">
+                <tr v-for="history in paginatedHistories" :key="history.id" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors group">
                   <td class="py-3 px-4">
                     <span class="text-sm font-medium text-gray-900 uppercase">{{ history.user?.name || history.user?.username || 'Unknown User' }}</span>
                   </td>
@@ -77,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import axios from 'axios';
 
@@ -85,6 +93,9 @@ const authStore = useAuthStore();
 const histories = ref([]);
 const loading = ref(true);
 const filterStatus = ref('All');
+
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
 
 const fetchHistories = async () => {
   try {
@@ -103,6 +114,21 @@ const fetchHistories = async () => {
 const filteredHistories = computed(() => {
   if (filterStatus.value === 'All') return histories.value;
   return histories.value.filter(h => h.status === filterStatus.value);
+});
+
+watch(filterStatus, () => {
+  currentPage.value = 1;
+});
+
+const totalItems = computed(() => filteredHistories.value.length);
+const totalPages = computed(() => Math.ceil(totalItems.value / itemsPerPage.value) || 1);
+const startIndex = computed(() => totalItems.value === 0 ? 0 : (currentPage.value - 1) * itemsPerPage.value + 1);
+const endIndex = computed(() => Math.min(currentPage.value * itemsPerPage.value, totalItems.value));
+
+const paginatedHistories = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return filteredHistories.value.slice(start, end);
 });
 
 const formatDate = (dateString) => {

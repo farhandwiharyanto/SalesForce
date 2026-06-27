@@ -339,6 +339,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../api/axios';
+import Swal from 'sweetalert2';
 
 const route = useRoute();
 const contractId = route.params.id;
@@ -448,7 +449,19 @@ const linkSia = async () => {
 
 const unlinkSia = async () => {
   if (!linkedSia.value) return;
-  if (!confirm('Are you sure you want to unlink this SIA?')) return;
+
+  const result = await Swal.fire({
+    title: 'Unlink SIA',
+    text: 'Are you sure you want to unlink this SIA?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#0f766e',
+    cancelButtonColor: '#9ca3af',
+    confirmButtonText: 'Yes, unlink it!',
+    cancelButtonText: 'Cancel'
+  });
+
+  if (!result.isConfirmed) return;
   
   try {
     await api.put(`/service-instance-accounts/${linkedSia.value.id}`, {

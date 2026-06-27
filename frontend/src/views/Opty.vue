@@ -68,10 +68,10 @@
                 <span v-else class="text-sm text-gray-500">-</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
-                {{ opty.target_close_date || '-' }}
+                {{ opty.target_close_date ? opty.target_close_date.split('T')[0] : '-' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
-                {{ opty.customer_expected_rfs || '-' }}
+                {{ opty.customer_expected_rfs ? opty.customer_expected_rfs.split('T')[0] : '-' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
                 {{ new Date(opty.created_at).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}
@@ -107,7 +107,7 @@
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden transform transition-all animate-modal-in border border-gray-100 my-8">
           <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
             <h3 class="text-lg font-bold text-gray-900">{{ editingId ? 'Edit Opportunity' : 'Add New Opportunity' }}</h3>
-            <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <button type="button" @click="closeEditModal" class="text-gray-400 hover:text-gray-600 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
@@ -242,7 +242,7 @@
             </div>
 
             <div class="pt-6 flex justify-end gap-3 border-t border-gray-100 mt-8">
-              <button type="button" @click="showModal = false" class="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-colors text-sm border border-transparent">Cancel</button>
+              <button type="button" @click="closeEditModal" class="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-colors text-sm border border-transparent">Cancel</button>
               <button type="submit" :disabled="isSaving" class="px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all transform hover:-translate-y-0.5 text-sm flex items-center gap-2">
                 <span v-if="isSaving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 {{ editingId ? 'Update Opportunity' : 'Save Opportunity' }}
@@ -331,12 +331,15 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../api/axios'
 import ImportModal from '../components/ImportModal.vue';
 import { useAuthStore } from '../stores/auth';
+import Swal from 'sweetalert2';
 
 const authStore = useAuthStore();
+const route = useRoute();
+const router = useRouter();
 const optys = ref([]);
 const customers = ref([]);
 const users = ref([])
@@ -445,6 +448,11 @@ const fetchData = async () => {
     customers.value = custRes.data;
     users.value = usersRes.data;
     isLoading.value = false;
+
+    if (route.query.edit) {
+      const optyToEdit = optys.value.find(o => String(o.id) === String(route.query.edit));
+      if (optyToEdit) openEditModal(optyToEdit);
+    }
   } catch (error) {
     console.error('Error fetching data:', error);
     showNotification('Failed to fetch data', 'error');
@@ -477,8 +485,8 @@ const openEditModal = (opty) => {
     assigned_to: opty.assigned_to,
     owner_id: opty.owner_id,
     customer_id: opty.customer_id,
-    target_close_date: opty.target_close_date || '',
-    customer_expected_rfs: opty.customer_expected_rfs || '',
+    target_close_date: opty.target_close_date ? opty.target_close_date.split('T')[0] : '',
+    customer_expected_rfs: opty.customer_expected_rfs ? opty.customer_expected_rfs.split('T')[0] : '',
     request_type: opty.request_type,
     stage: opty.stage,
     confidence_level: opty.confidence_level,
@@ -487,6 +495,13 @@ const openEditModal = (opty) => {
     is_converted_from_lead: opty.is_converted_from_lead
   };
   showModal.value = true;
+};
+
+const closeEditModal = () => {
+  showModal.value = false;
+  if (route.query.return_to) {
+    router.push(route.query.return_to);
+  }
 };
 
 const saveOpty = async () => {
@@ -505,7 +520,11 @@ const saveOpty = async () => {
       showNotification('Opportunity added successfully!');
     }
     showModal.value = false;
-    fetchData();
+    if (route.query.return_to) {
+      router.push(route.query.return_to);
+    } else {
+      fetchData();
+    }
   } catch (error) {
     console.error('Error saving opty:', error);
     showNotification(error.response?.data?.message || 'Failed to save opty', 'error');
@@ -520,10 +539,19 @@ const generateSia = async (opty) => {
     return;
   }
   
-  if (!confirm(`Are you sure you want to generate a Service Instance Account for Opty #${opty.opportunity_number}?`)) {
+  const result = await Swal.fire({
+    title: 'Generate SIA?',
+    text: `Are you sure you want to generate a Service Instance Account for Opty #${opty.opportunity_number}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#16a34a',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Yes, Generate it!'
+  });
+
+  if (!result.isConfirmed) {
     return;
   }
-
   try {
     isGeneratingSia.value = opty.id;
     await api.post('/service-instance-accounts', {

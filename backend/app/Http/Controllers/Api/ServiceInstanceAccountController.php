@@ -12,7 +12,13 @@ class ServiceInstanceAccountController extends Controller
 {
     public function index()
     {
-        return response()->json(ServiceInstanceAccount::with(['opty.customer', 'opty.product', 'contract'])->latest()->get());
+        return response()->json(ServiceInstanceAccount::with(['opty.customer', 'opty.product', 'opty.owner', 'contract'])->latest()->get());
+    }
+
+    public function show($id)
+    {
+        $sia = ServiceInstanceAccount::with(['opty.customer', 'opty.product', 'opty.owner', 'contract'])->findOrFail($id);
+        return response()->json($sia);
     }
 
     public function store(Request $request)
@@ -28,7 +34,7 @@ class ServiceInstanceAccountController extends Controller
             abort(400, 'Only Closed Won optys can be bound to an SIA Contract.');
         }
 
-        if (ServiceInstanceAccount::where('opty_id', $opty->id)->exists()) {
+        if (ServiceInstanceAccount::where('deal_id', $opty->id)->exists()) {
             abort(400, 'An SIA Contract already exists for this opty.');
         }
 
@@ -55,7 +61,7 @@ class ServiceInstanceAccountController extends Controller
 
         $contract = ServiceInstanceAccount::create([
             'sia_number' => $siaNumber,
-            'opty_id' => $opty->id,
+            'deal_id' => $opty->id,
             'customer_id' => $validated['customer_id'],
             'company_name' => $validated['company_name'],
             'status' => 'Registered',
@@ -124,7 +130,7 @@ class ServiceInstanceAccountController extends Controller
 
                 ServiceInstanceAccount::create([
                     'sia_number' => $siaNumber,
-                    'opty_id' => $item['Opty ID'] ?? null,
+                    'deal_id' => $item['Opty ID'] ?? null,
                     'customer_id' => $customer_id,
                     'company_name' => $company_name,
                     'status' => $item['Status'] ?? 'Registered',

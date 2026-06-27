@@ -25,6 +25,16 @@ class User extends Authenticatable
         return trim("{$this->first_name} {$this->last_name}");
     }
 
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    public function subordinates()
+    {
+        return $this->hasMany(User::class, 'manager_id');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

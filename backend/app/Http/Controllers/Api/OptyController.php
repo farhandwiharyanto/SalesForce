@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Opty;
+use App\Models\OptyHistory;
 use Illuminate\Http\Request;
 
 class OptyController extends Controller
 {
     public function index()
     {
-        return response()->json(Opty::with(['customer', 'product', 'assignee', 'owner'])->latest()->get());
+        return response()->json(Opty::with(['customer', 'product', 'assignee', 'owner', 'serviceInstanceAccount'])->latest()->get());
     }
 
     public function store(Request $request)
@@ -38,12 +39,20 @@ class OptyController extends Controller
         }
 
         $opty = Opty::create($validated);
-        return response()->json($opty->load(['customer', 'product', 'assignee', 'owner']), 201);
+        
+        OptyHistory::create([
+            'opty_id' => $opty->id,
+            'user_id' => $request->user()->id ?? null,
+            'action' => 'created',
+            'description' => 'Opportunity created'
+        ]);
+
+        return response()->json($opty->load(['customer', 'product', 'assignee', 'owner', 'serviceInstanceAccount']), 201);
     }
 
     public function show(Opty $opty)
     {
-        return response()->json($opty->load(['customer', 'product', 'assignee', 'owner']));
+        return response()->json($opty->load(['customer', 'product', 'assignee', 'owner', 'serviceInstanceAccount']));
     }
 
     public function update(Request $request, Opty $opty)
@@ -71,9 +80,46 @@ class OptyController extends Controller
         }
 
         $oldStage = $opty->stage;
-        $opty->update($validated);
+        
+        $opty->fill($validated);
+        $dirty = $opty->getDirty();
+        if (count($dirty) > 0) {
+            $changes = [];
+            foreach ($dirty as $key => $newValue) {
+                $oldValue = $opty->getOriginal($key);
+                $keyLabel = ucwords(str_replace('_', ' ', $key));
+                $changes[] = "$keyLabel changed to " . ($newValue ?: 'Empty');
+            }
+            OptyHistory::create([
+                'opty_id' => $opty->id,
+                'user_id' => $request->user()->id ?? null,
+                'action' => 'updated',
+                'description' => implode(', ', $changes)
+            ]);
+        }
+        $opty->save();
 
         if ($oldStage !== 'Closed Won' && $opty->stage === 'Closed Won') {
+            if (!\App\Models\ServiceInstanceAccount::where('deal_id', $opty->id)->exists()) {
+                $year = date('Y');
+                $custIdFormatted = str_pad($opty->customer_id, 3, '0', STR_PAD_LEFT);
+                $latestSia = \App\Models\ServiceInstanceAccount::where('sia_number', 'like', "{$year}{$custIdFormatted}%")
+                                        ->orderBy('sia_number', 'desc')
+                                        ->first();
+
+                $newIncrement = $latestSia ? ((int) substr($latestSia->sia_number, -3)) + 1 : 1;
+                $incrementFormatted = str_pad($newIncrement, 3, '0', STR_PAD_LEFT);
+                $siaNumber = "{$year}{$custIdFormatted}{$incrementFormatted}";
+
+                \App\Models\ServiceInstanceAccount::create([
+                    'sia_number' => $siaNumber,
+                    'deal_id' => $opty->id,
+                    'customer_id' => $opty->customer_id,
+                    'company_name' => $opty->customer->customer_name ?? 'Unknown',
+                    'status' => 'Registered',
+                ]);
+            }
+
             event(new \App\Events\OptyClosedWon($opty));
 
             \App\Models\WebhookLog::create([
@@ -88,7 +134,7 @@ class OptyController extends Controller
             ]);
         }
 
-        return response()->json($opty->load(['customer', 'product', 'assignee', 'owner']));
+        return response()->json($opty->load(['customer', 'product', 'assignee', 'owner', 'serviceInstanceAccount']));
     }
 
     public function destroy(Request $request, Opty $opty)
@@ -112,6 +158,13 @@ class OptyController extends Controller
             'discount_status' => 'pending'
         ]);
 
+        OptyHistory::create([
+            'opty_id' => $opty->id,
+            'user_id' => $request->user()->id ?? null,
+            'action' => 'discount_requested',
+            'description' => "Requested discount of Rp " . number_format($validated['discount_amount'], 0, ',', '.')
+        ]);
+
         return response()->json($opty->load(['customer', 'product', 'assignee', 'owner']));
     }
 
@@ -121,6 +174,13 @@ class OptyController extends Controller
 
         $opty->update([
             'discount_status' => 'approved'
+        ]);
+
+        OptyHistory::create([
+            'opty_id' => $opty->id,
+            'user_id' => $request->user()->id ?? null,
+            'action' => 'discount_approved',
+            'description' => 'Discount request approved'
         ]);
 
         return response()->json($opty->load(['customer', 'product', 'assignee', 'owner']));
@@ -134,7 +194,19 @@ class OptyController extends Controller
             'discount_status' => 'rejected'
         ]);
 
+        OptyHistory::create([
+            'opty_id' => $opty->id,
+            'user_id' => $request->user()->id ?? null,
+            'action' => 'discount_rejected',
+            'description' => 'Discount request rejected'
+        ]);
+
         return response()->json($opty->load(['customer', 'product', 'assignee', 'owner']));
+    }
+
+    public function histories(Opty $opty)
+    {
+        return response()->json($opty->histories()->with('user:id,first_name,last_name,role')->get());
     }
 
     public function bulkStore(Request $request)

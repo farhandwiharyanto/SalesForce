@@ -9,7 +9,20 @@ class Customer extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nomor_sia', 'nomor_customer', 'customer_name', 'status', 'email', 'initial'];
+    protected $fillable = [
+        'nomor_customer',
+        'nomor_sia',
+        'customer_name',
+        'status',
+        'email',
+        'initial',
+        'owner_id'
+    ];
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
 
     protected static function boot()
     {

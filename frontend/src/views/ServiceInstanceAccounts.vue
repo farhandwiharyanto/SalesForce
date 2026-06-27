@@ -40,7 +40,11 @@
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr v-for="contract in contracts" :key="contract.id" class="hover:bg-gray-50 border-b border-gray-50">
-              <td class="py-4 px-4 font-mono text-sm font-bold text-blue-600">{{ contract.sia_number }}</td>
+              <td class="py-4 px-4 font-mono text-sm font-bold">
+                <router-link :to="`/service-instance-accounts/${contract.id}`" class="text-blue-600 hover:text-blue-800 hover:underline">
+                  {{ contract.sia_number }}
+                </router-link>
+              </td>
               <td class="py-4 px-4 text-sm text-gray-700 font-semibold">{{ contract.opty?.customer?.customer_name || contract.company_name }}</td>
               <td class="py-4 px-4 font-mono text-sm font-medium text-gray-500">{{ contract.billing_account_number || '-' }}</td>
               <td class="py-4 px-4 text-sm text-gray-600 max-w-[180px] truncate" :title="contract.opty?.product?.name">{{ contract.opty?.product?.name || '-' }}</td>

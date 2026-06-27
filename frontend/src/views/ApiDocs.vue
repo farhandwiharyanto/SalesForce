@@ -84,6 +84,7 @@ const apiGroups = ref([
       { method: 'POST', path: '/api/optys/{id}/discount-request', description: 'Meminta persetujuan diskon tambahan.' },
       { method: 'POST', path: '/api/optys/{id}/discount-approve', description: 'Menyetujui diskon (oleh atasan).' },
       { method: 'POST', path: '/api/optys/{id}/discount-reject', description: 'Menolak diskon (oleh atasan).' },
+      { method: 'GET', path: '/api/optys/{id}/history', description: 'Mendapatkan riwayat perubahan (history) dari suatu Opty.' },
     ]
   },
   {
@@ -124,6 +125,7 @@ const apiGroups = ref([
     description: 'Manajemen operasional purna jual dan garansi.',
     endpoints: [
       { method: 'GET/POST/PUT', path: '/api/service-instance-accounts', description: 'Index, Store, Update data SIA.' },
+      { method: 'GET', path: '/api/service-instance-accounts/{id}', description: 'Mendapatkan detail lengkap dari suatu SIA beserta data relasi Optynya.' },
       { method: 'POST', path: '/api/service-instance-accounts/bulk', description: 'Bulk insert SIA.' },
     ]
   },

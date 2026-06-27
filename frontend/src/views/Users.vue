@@ -25,16 +25,26 @@ const newUser = ref({
 
 const availableMenus = ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract', 'OrderSales Logs', 'User Management', 'Semua API']
 
+const parseLegacyMenus = (menus) => {
+  if (!menus || !Array.isArray(menus)) return [];
+  return menus.map(m => {
+    if (typeof m === 'string') {
+      return { name: m, view: true, create: true, edit: true, delete: true };
+    }
+    return { ...m };
+  });
+}
+
 const roleMenus = {
-  admin: [...availableMenus],
-  administrator: [...availableMenus],
-  pimpinan_sales: ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract'],
-  sales: ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract']
+  admin: parseLegacyMenus([...availableMenus]),
+  administrator: parseLegacyMenus([...availableMenus]),
+  pimpinan_sales: parseLegacyMenus(['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract']),
+  sales: parseLegacyMenus(['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract'])
 }
 
 watch(() => newUser.value.role, (newRole, oldRole) => {
   if (oldRole && newRole !== oldRole) {
-    newUser.value.menus = roleMenus[newRole] ? [...roleMenus[newRole]] : []
+    newUser.value.menus = roleMenus[newRole] ? JSON.parse(JSON.stringify(roleMenus[newRole])) : []
   }
 })
 
@@ -59,7 +69,7 @@ const fetchUsers = async () => {
 const openAddModal = () => {
   isEditing.value = false
   editingUserId.value = null
-  newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: 'sales', menus: [...roleMenus['sales']] }
+  newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: 'sales', menus: JSON.parse(JSON.stringify(roleMenus['sales'])) }
   showModal.value = true
 }
 
@@ -73,7 +83,7 @@ const openEditModal = (user) => {
     username: user.username,
     password: '',
     role: user.role,
-    menus: user.menus && user.menus.length > 0 ? [...user.menus] : (roleMenus[user.role] ? [...roleMenus[user.role]] : [])
+    menus: user.menus && user.menus.length > 0 ? parseLegacyMenus(user.menus) : (roleMenus[user.role] ? JSON.parse(JSON.stringify(roleMenus[user.role])) : [])
   }
   showModal.value = true
 }
@@ -162,9 +172,7 @@ onMounted(() => {
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Email</th>
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Role</th>
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ User Name</th>
-              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Other Email</th>
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Admin</th>
-              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Office Phone</th>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr v-for="user in users" :key="user.id" class="group hover:bg-gray-50/50 transition-colors">
@@ -188,13 +196,7 @@ onMounted(() => {
                 <span class="text-gray-700 text-[13px] uppercase">{{ user.username }}</span>
               </td>
               <td class="py-2 px-6">
-                <span class="text-gray-500 text-xs"></span>
-              </td>
-              <td class="py-2 px-6">
                 <span class="text-gray-700 text-[13px]">{{ user.role === 'admin' ? 'Yes' : 'No' }}</span>
-              </td>
-              <td class="py-2 px-6">
-                <span class="text-gray-500 text-xs"></span>
               </td>
             </tr>
           </tbody>
@@ -205,18 +207,18 @@ onMounted(() => {
     <!-- Add User Modal -->
     <transition name="fade">
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all animate-modal-in border border-white/40 relative">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl flex flex-col max-h-[95vh] overflow-hidden transform transition-all animate-modal-in border border-white/40 relative">
           
-          <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 flex justify-between items-center relative overflow-hidden">
+          <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 flex justify-between items-center relative overflow-hidden shrink-0">
             <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
             <h3 class="text-2xl font-black text-white relative z-10 tracking-tight">{{ isEditing ? 'Edit User' : 'Create New User' }}</h3>
-            <button @click="showModal = false" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-all relative z-10">
+            <button type="button" @click="showModal = false" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-all relative z-10">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
-          <form @submit.prevent="saveUser" class="p-8">
-            <div class="space-y-5">
+          <form @submit.prevent="saveUser" class="flex flex-col flex-1 overflow-hidden">
+            <div class="p-8 overflow-y-auto space-y-5">
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">First Name</label>
@@ -259,15 +261,47 @@ onMounted(() => {
               <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Menu Access Permissions</label>
                 <div class="grid grid-cols-2 gap-3">
-                  <label v-for="menu in availableMenus" :key="menu" class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-blue-50 rounded-xl cursor-pointer border border-transparent hover:border-blue-200 transition-all group shadow-sm">
-                    <input type="checkbox" :value="menu" v-model="newUser.menus" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 accent-blue-600" />
-                    <span class="font-bold text-gray-700 group-hover:text-blue-800 text-sm">{{ menu }}</span>
-                  </label>
+                  <div v-for="menu in availableMenus" :key="menu" class="p-3 bg-gray-50 border border-transparent hover:border-blue-200 rounded-xl transition-all shadow-sm flex flex-col justify-center">
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                      <input 
+                        type="checkbox" 
+                        :checked="newUser.menus.some(m => m.name === menu)"
+                        @change="(e) => {
+                          if (e.target.checked) {
+                            newUser.menus.push({ name: menu, view: true, create: true, edit: true, delete: true });
+                          } else {
+                            newUser.menus = newUser.menus.filter(m => m.name !== menu);
+                          }
+                        }"
+                        class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 accent-blue-600" 
+                      />
+                      <span class="font-bold text-gray-700 group-hover:text-blue-800 text-sm">{{ menu }}</span>
+                    </label>
+                    
+                    <div v-if="newUser.menus.some(m => m.name === menu)" class="mt-3 grid grid-cols-2 gap-2 pl-8 border-t border-gray-200 pt-2">
+                      <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" v-model="newUser.menus.find(m => m.name === menu).view" class="w-3.5 h-3.5 text-blue-600 rounded" />
+                        <span class="text-xs text-gray-500 font-medium">View</span>
+                      </label>
+                      <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" v-model="newUser.menus.find(m => m.name === menu).create" class="w-3.5 h-3.5 text-blue-600 rounded" />
+                        <span class="text-xs text-gray-500 font-medium">Create</span>
+                      </label>
+                      <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" v-model="newUser.menus.find(m => m.name === menu).edit" class="w-3.5 h-3.5 text-blue-600 rounded" />
+                        <span class="text-xs text-gray-500 font-medium">Edit</span>
+                      </label>
+                      <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" v-model="newUser.menus.find(m => m.name === menu).delete" class="w-3.5 h-3.5 text-blue-600 rounded" />
+                        <span class="text-xs text-gray-500 font-medium">Delete</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="mt-10 flex justify-end gap-3 border-t border-gray-100 pt-6">
+            <div class="px-8 py-5 flex justify-end gap-3 border-t border-gray-100 bg-gray-50 shrink-0">
               <button type="button" @click="showModal = false" class="px-6 py-3 rounded-xl font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all">Cancel</button>
               <button type="submit" class="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transform hover:-translate-y-0.5 transition-all">{{ isEditing ? 'Update User' : 'Save User' }}</button>
             </div>

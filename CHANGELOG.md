@@ -28,7 +28,14 @@ Dokumen ini berisi rangkuman perubahan (*update*) terbaru pada sistem CRM SalesF
 - **Autofill Data:** Memilih Opty secara otomatis akan menarik *Company Name* dan *Customer ID*, yang juga terhubung langsung dengan pratinjau dokumen di sebelah kanan layar.
 - **Unduh PDF Kontrak:** Mengintegrasikan fitur unduh PDF kontrak menggunakan fungsi pencetakan native (*window.print* dengan CSS `@media print`), menghindari konflik _Vite dependency_ pada Docker container.
 
-### 6. Perbaikan Stabilitas (Bug Fixes)
+### 6. Pembaruan Detail SIA, UI, dan Endpoint API
+- **Halaman SIA Detail:** Menambahkan halaman spesifik untuk melihat detail SIA (`SiaDetail.vue`), menampilkan rincian seperti *Customer Name*, *Order (Opty ID)*, dan nilai proyek (*OTC & MRC*) yang langsung ditarik dari relasi *Opty*.
+- **Interaksi Tautan (Links):** Nama pelanggan, ID kontrak, dan pengguna yang ditugaskan (*Assigned To*) di halaman detail SIA sekarang merupakan tautan (*clickable links*) yang mengarah ke halaman profil mereka masing-masing.
+- **Perbaikan Relasi *Backend*:** Mengubah relasi pengguna di model `Opty` dan *controller* agar sistem dapat dengan akurat menarik data asli dari Pemilik Opty (`opty.owner`).
+- **Konsistensi UI (SweetAlert2):** Menyempurnakan peringatan konfirmasi penghapusan (*Unlink SIA*) pada halaman *Contract Detail* serta tombol lainnya agar menggunakan *popup* estetik dari SweetAlert2 alih-alih `confirm()` bawaan peramban.
+- **Dokumentasi API Terpusat:** Menambahkan *endpoint* detail SIA (`GET /api/service-instance-accounts/{id}`) ke dalam modul Dokumentasi Semua API (`ApiDocs.vue`).
+
+### 7. Perbaikan Stabilitas (Bug Fixes)
 - Memperbaiki isu hilangnya _State Auth_ pada saat me-refresh halaman yang diakibatkan oleh kurangnya _Endpoint_ `/me`.
 - Menambahkan _Axios Interceptor_ pada frontend untuk secara otomatis melampirkan Token *Bearer* di setiap *request* yang dilakukan ke backend, menghilangkan bug angka 0 pada *dashboard*.
 

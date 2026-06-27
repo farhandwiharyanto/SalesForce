@@ -85,6 +85,12 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
+        path: '/service-instance-accounts/:id',
+        name: 'SiaDetail',
+        component: () => import('../views/SiaDetail.vue'),
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/contracts',
         name: 'Contracts',
         component: Contracts,

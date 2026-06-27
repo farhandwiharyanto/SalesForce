@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\FilterByUserRoleTrait;
 
 class Opty extends Model
 {
+    use FilterByUserRoleTrait;
+
     protected $table = 'opty';
     protected $fillable = [
         'opportunity_number',
@@ -50,5 +53,15 @@ class Opty extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function histories()
+    {
+        return $this->hasMany(OptyHistory::class)->latest();
+    }
+
+    public function serviceInstanceAccount()
+    {
+        return $this->hasOne(ServiceInstanceAccount::class, 'deal_id');
     }
 }

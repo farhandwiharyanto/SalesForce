@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\FilterByUserRoleTrait;
 
 class Lead extends Model
 {
+    use HasFactory, FilterByUserRoleTrait;
+
     protected $fillable = [
         'lead_number', 'first_name', 'last_name', 'email', 'status', 
         'customer_id', 'owner_id', 'product_id'

@@ -14,20 +14,20 @@ class ActivityController extends Controller
         $activities = [];
 
         // Leads
-        $leads = DB::table('leads')->orderBy('created_at', 'desc')->limit(10)->get();
+        $leads = \App\Models\Lead::orderBy('created_at', 'desc')->limit(10)->get();
         foreach ($leads as $lead) {
             $activities[] = [
                 'id' => 'lead_' . $lead->id,
                 'type' => 'Lead',
                 'title' => 'New Lead: ' . $lead->first_name . ' ' . $lead->last_name,
-                'description' => 'Company: ' . $lead->company . ' | Status: ' . $lead->status,
+                'description' => 'Lead No: ' . $lead->lead_number . ' | Status: ' . $lead->status,
                 'date' => $lead->created_at,
                 'color' => 'blue',
             ];
         }
 
         // Optys
-        $optys = DB::table('optys')->orderBy('created_at', 'desc')->limit(10)->get();
+        $optys = \App\Models\Opty::orderBy('created_at', 'desc')->limit(10)->get();
         foreach ($optys as $opty) {
             $activities[] = [
                 'id' => 'opty_' . $opty->id,
@@ -40,20 +40,20 @@ class ActivityController extends Controller
         }
 
         // Customers
-        $customers = DB::table('customers')->orderBy('created_at', 'desc')->limit(10)->get();
+        $customers = \App\Models\Customer::orderBy('created_at', 'desc')->limit(10)->get();
         foreach ($customers as $customer) {
             $activities[] = [
                 'id' => 'customer_' . $customer->id,
                 'type' => 'Customer',
                 'title' => 'New Customer: ' . $customer->customer_name,
-                'description' => 'Segment: ' . $customer->segment,
+                'description' => 'Status: ' . $customer->status,
                 'date' => $customer->created_at,
                 'color' => 'green',
             ];
         }
 
         // Contracts
-        $contracts = DB::table('contracts')->orderBy('created_at', 'desc')->limit(10)->get();
+        $contracts = \App\Models\Contract::orderBy('created_at', 'desc')->limit(10)->get();
         foreach ($contracts as $contract) {
             $activities[] = [
                 'id' => 'contract_' . $contract->id,
@@ -65,13 +65,13 @@ class ActivityController extends Controller
             ];
         }
 
-        // Users
-        $users = DB::table('users')->orderBy('created_at', 'desc')->limit(10)->get();
+        // Users (only admin sees users in activities, let's just let everyone see it or leave it)
+        $users = \App\Models\User::orderBy('created_at', 'desc')->limit(10)->get();
         foreach ($users as $user) {
             $activities[] = [
                 'id' => 'user_' . $user->id,
                 'type' => 'User',
-                'title' => 'New User: ' . $user->name,
+                'title' => 'New User: ' . trim($user->first_name . ' ' . $user->last_name),
                 'description' => 'Role: ' . $user->role,
                 'date' => $user->created_at,
                 'color' => 'orange',

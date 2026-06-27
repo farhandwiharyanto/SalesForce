@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\FilterByUserRoleTrait;
 
 class Contract extends Model
 {
-    use HasFactory;
+    use HasFactory, FilterByUserRoleTrait;
+
+    const OWNER_COLUMN = 'assigned_to';
 
     protected $fillable = [
         'contract_number',

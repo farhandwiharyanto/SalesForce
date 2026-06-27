@@ -48,6 +48,15 @@
                 <option value="Deactivated">Deactivated</option>
               </select>
             </div>
+            <div v-if="authStore.user?.role === 'admin' || authStore.user?.role === 'administrator'">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Account Owner (Sales)</label>
+              <select v-model="form.owner_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border bg-white">
+                <option :value="null">-- Select Owner --</option>
+                <option v-for="user in users" :key="user.id" :value="user.id">
+                  {{ user.first_name }} {{ user.last_name }} ({{ user.role }})
+                </option>
+              </select>
+            </div>
             <div class="md:col-span-2 flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
               <button type="button" @click="closeModal" class="px-5 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-semibold transition-colors">Cancel</button>
               <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-colors shadow-md shadow-blue-200">
@@ -69,6 +78,7 @@
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer Name</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer No</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Email</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Account Owner</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
             <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Action</th>
           </tr>
@@ -83,6 +93,9 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ customer.customer_name }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-700">{{ customer.nomor_customer }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ customer.email }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">
+              {{ customer.owner ? (customer.owner.first_name + ' ' + (customer.owner.last_name || '')).trim() : '-' }}
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="px-3 py-1 text-xs font-bold rounded-full border shadow-sm"
                 :class="{
@@ -94,7 +107,7 @@
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <button v-if="authStore.hasAction('Customers', 'edit')" @click="openEditCustomer(customer)" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">
+              <button v-if="authStore.hasAction('Customers', 'edit') && (authStore.user?.role === 'admin' || authStore.user?.role === 'administrator' || customer.owner_id === authStore.user?.id)" @click="openEditCustomer(customer)" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">
                 Edit
               </button>
             </td>
@@ -133,6 +146,7 @@ import Swal from 'sweetalert2';
 
 const authStore = useAuthStore();
 const customers = ref([]);
+const users = ref([]);
 const showCreateForm = ref(false);
 const showEditForm = ref(false);
 const notification = ref(null);
@@ -157,11 +171,12 @@ const form = ref({
   customer_name: '',
   email: '',
   initial: '',
-  status: 'Registered'
+  status: 'Registered',
+  owner_id: null
 });
 
 const resetForm = () => {
-  form.value = { customer_name: '', email: '', initial: '', status: 'Registered' };
+  form.value = { customer_name: '', email: '', initial: '', status: 'Registered', owner_id: null };
   editingId.value = null;
 }
 
@@ -203,7 +218,8 @@ const openEditCustomer = (customer) => {
     customer_name: customer.customer_name,
     email: customer.email,
     initial: customer.initial,
-    status: customer.status || 'Registered'
+    status: customer.status || 'Registered',
+    owner_id: customer.owner_id
   };
   showEditForm.value = true;
 };
@@ -225,8 +241,20 @@ const updateCustomer = async () => {
   }
 };
 
+const fetchUsers = async () => {
+  if (authStore.user?.role === 'admin' || authStore.user?.role === 'administrator') {
+    try {
+      const res = await api.get('/users');
+      users.value = res.data;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+};
+
 onMounted(() => {
   fetchCustomers();
+  fetchUsers();
 });
 </script>
 

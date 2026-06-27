@@ -10,7 +10,7 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        return response()->json(Customer::latest()->get());
+        return response()->json(Customer::with('owner')->latest()->get());
     }
 
     public function store(Request $request)
@@ -22,6 +22,7 @@ class CustomerController extends Controller
             'status' => 'required|string|in:Registered,Active,Deactivated',
             'email' => 'required|email|unique:customers',
             'initial' => 'required|string|max:4',
+            'owner_id' => 'nullable|exists:users,id',
         ]);
 
         $customer = Customer::create($validated);
@@ -35,6 +36,9 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer)
     {
+        if ($request->user() && $request->user()->role === 'sales' && $customer->owner_id !== $request->user()->id) {
+            abort(403, 'Permission Denied: You cannot edit a customer that does not belong to you.');
+        }
 
         $validated = $request->validate([
             'nomor_sia' => 'nullable|string|unique:customers,nomor_sia,'.$customer->id,
@@ -43,6 +47,7 @@ class CustomerController extends Controller
             'status' => 'sometimes|required|string|in:Registered,Active,Deactivated',
             'email' => 'sometimes|required|email|unique:customers,email,'.$customer->id,
             'initial' => 'sometimes|required|string|max:4',
+            'owner_id' => 'sometimes|nullable|exists:users,id',
         ]);
 
         $customer->update($validated);

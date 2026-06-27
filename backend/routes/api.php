@@ -35,13 +35,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('users', UserController::class);
     Route::apiResource('contracts', \App\Http\Controllers\Api\ContractController::class);
-    Route::apiResource('service-instance-accounts', \App\Http\Controllers\Api\ServiceInstanceAccountController::class)->only(['index', 'store', 'update']);
+    Route::apiResource('service-instance-accounts', \App\Http\Controllers\Api\ServiceInstanceAccountController::class)->only(['index', 'store', 'update', 'show']);
     Route::apiResource('webhook-logs', \App\Http\Controllers\Api\WebhookLogController::class)->only(['index']);
     
     // Optys discount endpoints
     Route::post('/optys/{opty}/discount-request', [OptyController::class, 'requestDiscount']);
     Route::post('/optys/{opty}/discount-approve', [OptyController::class, 'approveDiscount']);
     Route::post('/optys/{opty}/discount-reject', [OptyController::class, 'rejectDiscount']);
+    Route::get('/optys/{opty}/history', [OptyController::class, 'histories']);
     Route::post('/webhook-logs/{webhookLog}/retry', [\App\Http\Controllers\Api\WebhookLogController::class, 'retry']);
     
     Route::get('/activities', [ActivityController::class, 'index']);
