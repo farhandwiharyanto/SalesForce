@@ -12,7 +12,9 @@ Route::get('/migrate-now-secret', function () {
         Artisan::call('migrate', ['--force' => true]);
         Artisan::call('db:seed', ['--class' => 'RoleProfileSeeder', '--force' => true]);
         return "Migration and seeding successful! Output: " . Artisan::output();
-    } catch (\Exception $e) {
-        return "Error: " . $e->getMessage();
+    } catch (\Throwable $e) {
+        return "Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . 
+               "<br>DB_HOST: " . env('DB_HOST') . 
+               "<br>APP_KEY set? " . (env('APP_KEY') ? 'Yes' : 'No');
     }
 });

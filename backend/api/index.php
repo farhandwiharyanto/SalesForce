@@ -12,6 +12,9 @@ if (!is_dir($storagePath)) {
 $_ENV['APP_STORAGE'] = $storagePath;
 putenv("APP_STORAGE={$storagePath}");
 
+$_ENV['APP_DEBUG'] = 'true';
+putenv("APP_DEBUG=true");
+
 // Laravel requires these paths to be writable for caching and logging
 $_ENV['APP_SERVICES_CACHE'] = '/tmp/storage/framework/cache/services.php';
 $_ENV['APP_PACKAGES_CACHE'] = '/tmp/storage/framework/cache/packages.php';
