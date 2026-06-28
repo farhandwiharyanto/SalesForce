@@ -17,6 +17,7 @@ Route::get('/migrate-now-secret', function () {
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'RoleProfileSeeder', '--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'DatabaseSeeder', '--force' => true]);
         return "Migration Fresh and seeding successful! Output: " . \Illuminate\Support\Facades\Artisan::output();
     } catch (\Throwable $e) {
         return "Error during migration: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . 
