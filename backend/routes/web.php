@@ -9,9 +9,9 @@ Route::get('/', function () {
 
 Route::get('/migrate-now-secret', function () {
     try {
-        Artisan::call('migrate', ['--force' => true]);
+        Artisan::call('migrate:fresh', ['--force' => true]);
         Artisan::call('db:seed', ['--class' => 'RoleProfileSeeder', '--force' => true]);
-        return "Migration and seeding successful! Output: " . Artisan::output();
+        return "Migration Fresh and seeding successful! Output: " . Artisan::output();
     } catch (\Throwable $e) {
         return "Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . 
                "<br>DB_HOST: " . env('DB_HOST') . 
