@@ -38,18 +38,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('service-instance-accounts', \App\Http\Controllers\Api\ServiceInstanceAccountController::class)->only(['index', 'store', 'update', 'show']);
     Route::apiResource('webhook-logs', \App\Http\Controllers\Api\WebhookLogController::class)->only(['index']);
     
-    // Optys discount endpoints
-    Route::post('/optys/{opty}/discount-request', [OptyController::class, 'requestDiscount']);
-    Route::post('/optys/{opty}/discount-approve', [OptyController::class, 'approveDiscount']);
-    Route::post('/optys/{opty}/discount-reject', [OptyController::class, 'rejectDiscount']);
-    Route::get('/optys/{opty}/history', [OptyController::class, 'histories']);
+    // Opty Routes
+    Route::post('/optys/bulk', [OptyController::class, 'bulkStore']);
+    Route::post('/optys/{opty}/discount/request', [OptyController::class, 'requestDiscount']);
+    Route::post('/optys/{opty}/discount/approve', [OptyController::class, 'approveDiscount']);
+    Route::post('/optys/{opty}/discount/reject', [OptyController::class, 'rejectDiscount']);
+    Route::get('/optys/{opty}/histories', [OptyController::class, 'histories']);
+    Route::post('/optys/{opty}/upload-contract', [OptyController::class, 'uploadContract']);
+    Route::apiResource('optys', OptyController::class);
+
+    // Opty Approvals / Inbox
+    Route::get('/opty-approvals/inbox', [\App\Http\Controllers\Api\OptyApprovalController::class, 'inbox']);
+    Route::post('/optys/{opty}/submit-approval', [\App\Http\Controllers\Api\OptyApprovalController::class, 'submitApproval']);
+    
     Route::post('/webhook-logs/{webhookLog}/retry', [\App\Http\Controllers\Api\WebhookLogController::class, 'retry']);
     
+    Route::get('/audit-logs/{type}/{id}', [\App\Http\Controllers\Api\AuditLogController::class, 'index']);
     Route::get('/activities', [ActivityController::class, 'index']);
     Route::get('/login-histories', [\App\Http\Controllers\Api\LoginHistoryController::class, 'index']);
     
     Route::get('/roles/{role}/privileges', [RoleController::class, 'getPrivileges']);
     Route::put('/roles/{role}/privileges', [RoleController::class, 'updatePrivileges']);
+    Route::put('/roles/{role}/remove-from-users', [RoleController::class, 'removeFromUsers']);
+    
+    Route::apiResource('role-profiles', \App\Http\Controllers\Api\RoleProfileController::class);
     
     Route::apiResource('optys', OptyController::class);
 });

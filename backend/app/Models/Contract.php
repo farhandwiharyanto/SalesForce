@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\FilterByUserRoleTrait;
+use App\Traits\Auditable;
 
 class Contract extends Model
 {
-    use HasFactory, FilterByUserRoleTrait;
+    use HasFactory, FilterByUserRoleTrait, Auditable;
 
     const OWNER_COLUMN = 'assigned_to';
 

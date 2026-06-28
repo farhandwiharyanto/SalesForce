@@ -29,7 +29,8 @@ class UserController extends Controller
             'email' => 'required|email|max:255|unique:users',
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|string|in:admin,pimpinan_sales,sales',
+            'role' => 'required|string',
+            'role_profile_id' => 'nullable|exists:role_profiles,id',
             'menus' => 'nullable|array'
         ]);
 
@@ -40,6 +41,7 @@ class UserController extends Controller
             'username' => $validated['username'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'role_profile_id' => $validated['role_profile_id'] ?? null,
             'menus' => $validated['menus'] ?? []
         ]);
 
@@ -69,7 +71,8 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6',
-            'role' => 'required|string|in:admin,pimpinan_sales,sales',
+            'role' => 'required|string',
+            'role_profile_id' => 'nullable|exists:role_profiles,id',
             'menus' => 'nullable|array'
         ]);
 
@@ -79,6 +82,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'username' => $validated['username'],
             'role' => $validated['role'],
+            'role_profile_id' => $validated['role_profile_id'] ?? null,
             'menus' => $validated['menus'] ?? []
         ];
 

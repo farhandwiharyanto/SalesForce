@@ -25,6 +25,10 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
           Edit Contract
         </button>
+        <button @click="openHistoryModal" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2.5 rounded-xl shadow-sm transition-all font-semibold flex items-center gap-2 border border-gray-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          View History
+        </button>
       </div>
     </div>
 
@@ -327,6 +331,13 @@
         </div>
       </div>
     </transition>
+    <HistoryModal
+      :show="showHistoryModal"
+      :title="`History: ${contract.contract_number}`"
+      :is-loading="isLoadingHistory"
+      :histories="histories"
+      @close="showHistoryModal = false"
+    />
   </div>
 
   <div v-else-if="isLoading" class="flex flex-col items-center justify-center h-full flex-grow text-gray-500 font-semibold">
@@ -337,16 +348,38 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import api from '../api/axios';
+import { useAuthStore } from '../stores/auth';
 import Swal from 'sweetalert2';
+import HistoryModal from '../components/HistoryModal.vue';
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 const contractId = route.params.id;
 
 const contract = ref(null);
 const isLoading = ref(true);
 const notification = ref(null);
+
+const showHistoryModal = ref(false);
+const isLoadingHistory = ref(false);
+const histories = ref([]);
+
+const openHistoryModal = async () => {
+  showHistoryModal.value = true;
+  isLoadingHistory.value = true;
+  histories.value = [];
+  try {
+    const response = await api.get(`/audit-logs/contract/${contract.value.id}`);
+    histories.value = response.data;
+  } catch (error) {
+    console.error('Failed to fetch history', error);
+  } finally {
+    isLoadingHistory.value = false;
+  }
+};
 
 const customers = ref([]);
 const users = ref([]);
@@ -407,8 +440,8 @@ const openEditModal = () => {
     status: contract.value.status,
     customer_id: contract.value.customer_id,
     assigned_to: contract.value.assigned_to,
-    start_date: contract.value.start_date,
-    due_date: contract.value.due_date,
+    start_date: contract.value.start_date ? contract.value.start_date.split('T')[0].split(' ')[0] : '',
+    due_date: contract.value.due_date ? contract.value.due_date.split('T')[0].split(' ')[0] : '',
     contract_division: contract.value.contract_division,
   };
   showEditModal.value = true;

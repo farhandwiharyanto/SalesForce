@@ -49,16 +49,23 @@
             <tr v-if="optys.length === 0">
               <td colspan="9" class="px-6 py-12 text-center text-gray-400 font-medium">No optys found. <span>Create a new opty to get started.</span></td>
             </tr>
-            <tr v-for="opty in optys" :key="opty.id" class="hover:bg-gray-50/50 transition-colors group">
-              <td class="px-6 py-4 whitespace-nowrap">
+            <tr v-for="opty in optys" :key="opty.id" @click="router.push(`/optys/${opty.id}`)" class="hover:bg-gray-50/50 transition-colors group cursor-pointer">
+              <td class="px-6 py-4 whitespace-nowrap" @click.stop>
                 <router-link :to="`/optys/${opty.id}`" class="text-sm font-mono font-bold text-blue-600 hover:text-blue-800 transition-colors">{{ opty.opportunity_number }}</router-link>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-bold text-gray-900">{{ opty.name }}</div>
                 <div class="text-[10px] uppercase font-bold text-gray-400 mt-1">{{ opty.stage }}</div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-semibold text-blue-600">{{ opty.assignee ? (opty.assignee.first_name + ' ' + (opty.assignee.last_name||'')).trim() : '-' }}</div>
+              <td class="px-6 py-4 whitespace-nowrap" @click.stop>
+                <router-link v-if="opty.assignee && authStore.user?.role === 'admin'" :to="`/users/${opty.assignee.id}`" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 w-max">
+                  {{ (opty.assignee.first_name + ' ' + (opty.assignee.last_name||'')).trim() }}
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                </router-link>
+                <div v-else-if="opty.assignee" class="text-sm font-semibold text-blue-600">
+                  {{ (opty.assignee.first_name + ' ' + (opty.assignee.last_name||'')).trim() }}
+                </div>
+                <span v-else class="text-sm text-gray-500">-</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <router-link v-if="opty.customer" :to="`/customers`" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1">

@@ -90,7 +90,9 @@ class ServiceInstanceAccountController extends Controller
 
         $validated = $request->validate([
             'contract_id' => 'sometimes|nullable|exists:contracts,id',
-            // other fields if needed
+            'billing_account_number' => 'sometimes|nullable|string|max:255',
+            'status' => 'sometimes|required|string|max:255',
+            'company_name' => 'sometimes|required|string|max:255',
         ]);
 
         $sia->fill($validated);

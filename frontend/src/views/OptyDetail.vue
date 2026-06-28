@@ -17,7 +17,7 @@
         </div>
       </div>
       <div class="flex items-center gap-3" v-if="opty">
-        <button v-if="authStore.hasAction('Opty', 'edit')" @click="router.push(`/optys?edit=${opty.id}&return_to=/optys/${opty.id}`)" class="bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-xl shadow-sm transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5 border border-gray-200">
+        <button v-if="authStore.hasAction('Opty', 'edit') && opty.stage !== 'Closed Won' && opty.stage !== 'Closed Lost'" @click="router.push(`/optys?edit=${opty.id}&return_to=/optys/${opty.id}`)" class="bg-white hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-xl shadow-sm transition-all font-semibold flex items-center gap-2 transform hover:-translate-y-0.5 border border-gray-200">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
           Edit Opty
         </button>
@@ -33,6 +33,108 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           View History
         </button>
+      </div>
+    </div>
+
+    <!-- Contract & Approvals Section -->
+    <div v-if="opty && (opty.stage === 'Proposal or Quote' || opty.stage === 'Negotiation Review' || opty.stage === 'Closed Won' || opty.stage === 'Closed Lost')" class="mt-6 space-y-6">
+      
+      <!-- Contract Upload for Proposal or Quote -->
+      <div v-if="opty.stage === 'Proposal or Quote' || opty.contract_document_path" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+          <h2 class="text-sm font-bold text-gray-800 uppercase tracking-widest flex items-center gap-2">
+            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Contract Document
+          </h2>
+        </div>
+        <div class="p-6">
+          <div v-if="opty.contract_document_path" class="flex items-center gap-4 p-4 bg-green-50 border border-green-100 rounded-xl">
+            <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-gray-900">Contract Uploaded</h4>
+              <p class="text-xs text-gray-600">Contract ID: {{ opty.contract?.contract_number || 'Linked' }}</p>
+            </div>
+            <a :href="`http://localhost:8000/storage/${opty.contract_document_path}`" target="_blank" class="ml-auto px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-blue-600 hover:bg-blue-50 transition-colors">
+              View Document
+            </a>
+          </div>
+          
+          <div v-else-if="authStore.user?.role === 'sales' && opty.stage === 'Proposal or Quote'" class="space-y-4 max-w-xl">
+            <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800 font-medium">
+              Silakan pilih data kontrak dan upload dokumen PDF yang telah disiapkan sebelum melanjutkan ke tahap Negotiation Review.
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1.5">Pilih Kontrak</label>
+              <select v-model="selectedContractId" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm outline-none">
+                <option value="">Pilih Kontrak...</option>
+                <option v-for="c in availableContracts" :key="c.id" :value="c.id">{{ c.contract_number }} - {{ c.subject }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1.5">Upload Dokumen (PDF)</label>
+              <input type="file" accept=".pdf" @change="onFileSelected" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-2 text-sm outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            </div>
+            <button @click="uploadContract" :disabled="isUploadingContract || !selectedContractId || !selectedFile" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2">
+              <span v-if="isUploadingContract" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              Upload & Link Contract
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approvals Display for Negotiation Review -->
+      <div v-if="opty.stage === 'Negotiation Review' || opty.stage === 'Closed Won' || opty.stage === 'Closed Lost'" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+          <h2 class="text-sm font-bold text-gray-800 uppercase tracking-widest flex items-center gap-2">
+            <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            Approval Status
+          </h2>
+        </div>
+        <div class="p-6">
+          <div v-if="opty.rejection_note" class="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl">
+            <h4 class="text-sm font-bold text-red-800 mb-1">Ditolak (Rejected)</h4>
+            <p class="text-sm text-red-600 font-medium">Catatan: {{ opty.rejection_note }}</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Pimpinan -->
+            <div class="border rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all"
+                 :class="{'border-green-200 bg-green-50': opty.pimpinan_approval_status === 'approved', 'border-red-200 bg-red-50': opty.pimpinan_approval_status === 'rejected', 'border-gray-200 bg-gray-50': opty.pimpinan_approval_status === 'pending' || opty.pimpinan_approval_status === 'none'}">
+              <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                {{ pimpinanApproverName }}
+              </div>
+              <div class="font-black text-lg uppercase tracking-wide"
+                   :class="{'text-green-600': opty.pimpinan_approval_status === 'approved', 'text-red-600': opty.pimpinan_approval_status === 'rejected', 'text-gray-400': opty.pimpinan_approval_status === 'pending' || opty.pimpinan_approval_status === 'none'}">
+                {{ opty.pimpinan_approval_status }}
+              </div>
+            </div>
+            
+            <!-- Director -->
+            <div class="border rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all"
+                 :class="{'border-green-200 bg-green-50': opty.director_approval_status === 'approved', 'border-red-200 bg-red-50': opty.director_approval_status === 'rejected', 'border-gray-200 bg-gray-50': opty.director_approval_status === 'pending' || opty.director_approval_status === 'none'}">
+              <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                {{ directorApproverName }}
+              </div>
+              <div class="font-black text-lg uppercase tracking-wide"
+                   :class="{'text-green-600': opty.director_approval_status === 'approved', 'text-red-600': opty.director_approval_status === 'rejected', 'text-gray-400': opty.director_approval_status === 'pending' || opty.director_approval_status === 'none'}">
+                {{ opty.director_approval_status }}
+              </div>
+            </div>
+
+            <!-- Verificator -->
+            <div class="border rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all"
+                 :class="{'border-green-200 bg-green-50': opty.verificator_approval_status === 'approved', 'border-red-200 bg-red-50': opty.verificator_approval_status === 'rejected', 'border-gray-200 bg-gray-50': opty.verificator_approval_status === 'pending' || opty.verificator_approval_status === 'none'}">
+              <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                {{ verificatorApproverName }}
+              </div>
+              <div class="font-black text-lg uppercase tracking-wide"
+                   :class="{'text-green-600': opty.verificator_approval_status === 'approved', 'text-red-600': opty.verificator_approval_status === 'rejected', 'text-gray-400': opty.verificator_approval_status === 'pending' || opty.verificator_approval_status === 'none'}">
+                {{ opty.verificator_approval_status }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -198,8 +300,6 @@
           </div>
         </div>
       </div>
-    </div>
-
     <!-- Update Stage Modal -->
     <transition name="fade">
       <div v-if="showStageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
@@ -270,10 +370,11 @@
       </div>
     </transition>
   </div>
+</div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../api/axios';
 import Swal from 'sweetalert2';
@@ -294,9 +395,8 @@ const isGeneratingSia = ref(false);
 const pipelineStages = [
   'Prospect and Analysis',
   'Value Proposition',
-  'Perception Analysis',
   'Proposal or Quote',
-  'Negotiation or Review',
+  'Negotiation Review',
   'Closed Won',
   'Closed Lost'
 ];
@@ -328,10 +428,25 @@ const showHistoryModal = ref(false);
 const isLoadingHistory = ref(false);
 const histories = ref([]);
 
+const pimpinanApproverName = computed(() => {
+  const history = histories.value.find(h => h.action === 'approved' && h.description.includes('Pimpinan sales'));
+  return history?.user ? `${history.user.first_name} ${history.user.last_name}` : 'Unknown';
+});
+
+const directorApproverName = computed(() => {
+  const history = histories.value.find(h => h.action === 'approved' && h.description.includes('Director sales'));
+  return history?.user ? `${history.user.first_name} ${history.user.last_name}` : 'Unknown';
+});
+
+const verificatorApproverName = computed(() => {
+  const history = histories.value.find(h => h.action === 'approved' && h.description.includes('Verificator'));
+  return history?.user ? `${history.user.first_name} ${history.user.last_name}` : 'Unknown';
+});
+
 const fetchHistory = async () => {
   isLoadingHistory.value = true;
   try {
-    const response = await api.get(`/optys/${route.params.id}/history`);
+    const response = await api.get(`/optys/${route.params.id}/histories`);
     histories.value = response.data;
   } catch (error) {
     console.error('Failed to fetch history', error);
@@ -340,6 +455,8 @@ const fetchHistory = async () => {
   }
 };
 
+// Initial fetch inside onMounted will populate histories, so no need to watch showHistoryModal for the first time.
+// We can still watch it just to refresh the data when the modal opens.
 watch(showHistoryModal, (newVal) => {
   if (newVal) {
     fetchHistory();
@@ -360,6 +477,31 @@ const getActionLabel = (action) => {
 const updateStage = async () => {
   if (selectedStageToUpdate.value === 'Closed Won' && opty.value.discount_status === 'pending') {
     Swal.fire('Peringatan', 'Tidak bisa Closed Won karena diskon masih pending', 'warning');
+    return;
+  }
+
+  // Smart prompt for Value Proposition
+  if (selectedStageToUpdate.value === 'Value Proposition' && opty.value.discount_status === 'none') {
+    const result = await Swal.fire({
+      title: 'Diskon?',
+      text: 'Apakah opportunity ini membutuhkan diskon?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, butuh diskon',
+      cancelButtonText: 'Tidak perlu'
+    });
+
+    if (result.isConfirmed) {
+      showStageModal.value = false;
+      await requestDiscount();
+      // Only proceed to update stage if they actually requested a discount (checked by status change)
+      // Actually, we can just let them stay or update it. Let's just update the stage anyway.
+    }
+  }
+
+  // Prevent moving to Negotiation Review if Contract is missing
+  if (selectedStageToUpdate.value === 'Negotiation Review' && !opty.value.contract_document_path) {
+    Swal.fire('Peringatan', 'Harap upload dokumen kontrak terlebih dahulu di tahap Proposal or Quote', 'warning');
     return;
   }
 
@@ -430,7 +572,7 @@ const requestDiscount = async () => {
 
   if (amount) {
     try {
-      await api.post(`/optys/${opty.value.id}/discount-request`, { discount_amount: amount });
+      await api.post(`/optys/${opty.value.id}/discount/request`, { discount_amount: amount });
       Swal.fire('Success', 'Request diskon berhasil dikirim ke Pimpinan', 'success');
       fetchOptyDetails();
       fetchHistory();
@@ -443,7 +585,7 @@ const requestDiscount = async () => {
 const approveDiscount = async () => {
   if (!confirm('Apakah Anda yakin ingin menyetujui diskon ini?')) return;
   try {
-    await api.post(`/optys/${opty.value.id}/discount-approve`);
+    await api.post(`/optys/${opty.value.id}/discount/approve`);
     Swal.fire('Success', 'Diskon disetujui', 'success');
     fetchOptyDetails();
     fetchHistory();
@@ -455,7 +597,7 @@ const approveDiscount = async () => {
 const rejectDiscount = async () => {
   if (!confirm('Apakah Anda yakin ingin menolak diskon ini?')) return;
   try {
-    await api.post(`/optys/${opty.value.id}/discount-reject`);
+    await api.post(`/optys/${opty.value.id}/discount/reject`);
     Swal.fire('Success', 'Diskon ditolak', 'success');
     fetchOptyDetails();
     fetchHistory();
@@ -464,8 +606,54 @@ const rejectDiscount = async () => {
   }
 };
 
+// Contract Upload Logic
+const availableContracts = ref([]);
+const selectedContractId = ref('');
+const selectedFile = ref(null);
+const isUploadingContract = ref(false);
+
+const onFileSelected = (event) => {
+  selectedFile.value = event.target.files[0];
+};
+
+const fetchContracts = async () => {
+  if (authStore.user?.role === 'sales') {
+    try {
+      // Assuming GET /contracts returns filtered contracts for sales
+      const res = await api.get('/contracts');
+      availableContracts.value = res.data;
+    } catch (error) {
+      console.error('Failed to load contracts', error);
+    }
+  }
+};
+
+const uploadContract = async () => {
+  if (!selectedFile.value || !selectedContractId.value) return;
+  
+  const formData = new FormData();
+  formData.append('contract_id', selectedContractId.value);
+  formData.append('contract_file', selectedFile.value);
+
+  try {
+    isUploadingContract.value = true;
+    await api.post(`/optys/${opty.value.id}/upload-contract`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    Swal.fire('Success', 'Contract berhasil di-upload dan di-link', 'success');
+    fetchOptyDetails();
+    fetchHistory();
+  } catch (error) {
+    Swal.fire('Error', error.response?.data?.message || 'Gagal upload contract', 'error');
+  } finally {
+    isUploadingContract.value = false;
+  }
+};
+
 onMounted(() => {
   fetchOptyDetails();
+  fetchContracts();
+  fetchHistory();
 });
 </script>
 

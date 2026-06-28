@@ -12,6 +12,8 @@ import Users from '../views/Users.vue';
 import UserDetail from '../views/UserDetail.vue';
 import Roles from '../views/Roles.vue';
 import EditRole from '../views/EditRole.vue';
+import RoleProfiles from '../views/RoleProfiles.vue';
+import EditRoleProfile from '../views/EditRoleProfile.vue';
 import UserHistory from '../views/UserHistory.vue';
 import ApiDocs from '../views/ApiDocs.vue';
 import Activities from '../views/Activities.vue';
@@ -52,6 +54,24 @@ const routes = [
         path: '/roles/edit/:roleName',
         name: 'EditRole',
         component: EditRole,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/role-profiles',
+        name: 'RoleProfiles',
+        component: RoleProfiles,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/role-profiles/add',
+        name: 'AddRoleProfile',
+        component: EditRoleProfile,
+        meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/role-profiles/edit/:id',
+        name: 'EditRoleProfile',
+        component: EditRoleProfile,
         meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
@@ -143,6 +163,12 @@ const routes = [
         name: 'Activities',
         component: Activities,
         meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/inbox',
+        name: 'Inbox',
+        component: () => import('../views/Inbox.vue'),
+        meta: { requiresAuth: true }
     }
 ];
 
@@ -162,7 +188,7 @@ router.beforeEach(async (to, from, next) => {
         next({ name: 'Login' });
     } else if (to.meta.guest && authStore.isAuthenticated) {
         next({ name: 'Dashboard' });
-    } else if (to.meta.requiresAdmin && authStore.role !== 'admin') {
+    } else if (to.meta.requiresAdmin && !['admin', 'administrator'].includes(authStore.role)) {
         next({ name: 'Dashboard' });
     } else {
         next();

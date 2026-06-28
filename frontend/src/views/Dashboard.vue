@@ -87,7 +87,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
       <!-- Recent Activities -->
-      <div class="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <div v-if="['admin', 'administrator'].includes(authStore.user?.role)" class="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-extrabold text-gray-900">Recent Activities</h2>
           <router-link to="/activities" class="text-blue-600 hover:text-blue-800 text-sm font-bold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">View All &rarr;</router-link>

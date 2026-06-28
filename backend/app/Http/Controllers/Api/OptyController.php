@@ -57,6 +57,10 @@ class OptyController extends Controller
 
     public function update(Request $request, Opty $opty)
     {
+        if (in_array($opty->stage, ['Closed Won', 'Closed Lost']) && !in_array($request->user()->role, ['admin', 'administrator'])) {
+            abort(403, 'Cannot edit an opportunity that is already Closed Won or Closed Lost.');
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'assigned_to' => 'nullable|exists:users,id',
@@ -82,6 +86,14 @@ class OptyController extends Controller
         $oldStage = $opty->stage;
         
         $opty->fill($validated);
+
+        // If stage is being changed to Negotiation Review, start the approval flow
+        if ($oldStage !== 'Negotiation Review' && $opty->stage === 'Negotiation Review') {
+            $opty->pimpinan_approval_status = 'pending';
+            $opty->director_approval_status = 'pending';
+            $opty->verificator_approval_status = 'pending';
+        }
+
         $dirty = $opty->getDirty();
         if (count($dirty) > 0) {
             $changes = [];
@@ -150,7 +162,7 @@ class OptyController extends Controller
         abort_if(!in_array($request->user()->role, ['sales', 'admin']), 403, 'Only Sales and Admin can request discounts.');
 
         $validated = $request->validate([
-            'discount_amount' => 'required|numeric|min:0|max:'.($opty->estimated_value_otc ?: 0)
+            'discount_amount' => 'required|numeric|min:0|max:'.(($opty->estimated_value_otc ?: 0) + ($opty->estimated_value_mrc ?: 0))
         ]);
 
         $opty->update([
@@ -202,6 +214,30 @@ class OptyController extends Controller
         ]);
 
         return response()->json($opty->load(['customer', 'product', 'assignee', 'owner']));
+    }
+
+    public function uploadContract(Request $request, Opty $opty)
+    {
+        $request->validate([
+            'contract_id' => 'required|exists:contracts,id',
+            'contract_file' => 'required|file|mimes:pdf|max:10240' // 10MB max PDF
+        ]);
+
+        $path = $request->file('contract_file')->store('contracts', 'public');
+
+        $opty->update([
+            'contract_id' => $request->contract_id,
+            'contract_document_path' => $path
+        ]);
+
+        OptyHistory::create([
+            'opty_id' => $opty->id,
+            'user_id' => $request->user()->id ?? null,
+            'action' => 'contract_uploaded',
+            'description' => 'Contract document uploaded and linked'
+        ]);
+
+        return response()->json($opty->load(['contract']));
     }
 
     public function histories(Opty $opty)

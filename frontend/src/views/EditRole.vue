@@ -2,22 +2,22 @@
   <div class="h-full flex flex-col max-w-full overflow-hidden bg-gray-50 relative pb-12">
     <!-- Header Section -->
     <div class="p-6 pb-4 shrink-0 border-b border-gray-100 bg-white z-10 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900 tracking-tight">{{ isNewRole ? 'Create Role' : 'Edit Role' }}</h1>
+      <h1 class="text-2xl font-bold text-gray-900 tracking-tight">{{ isNewRole ? 'Create Hierarchy Node' : 'Edit Hierarchy Node' }}</h1>
     </div>
 
     <!-- Content Section -->
     <div class="flex-1 overflow-auto p-8">
-      <div class="max-w-6xl mx-auto bg-white border border-gray-200 shadow-sm p-8">
+      <div class="max-w-4xl mx-auto bg-white border border-gray-200 shadow-sm p-8">
         
         <form @submit.prevent="saveRole" class="space-y-6">
           
           <!-- Basic Role Info -->
           <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
             <div class="md:col-span-3 text-right">
-              <label class="text-sm font-semibold text-gray-700">Name Role <span class="text-red-500">*</span></label>
+              <label class="text-sm font-semibold text-gray-700">Hierarchy Role Name <span class="text-red-500">*</span></label>
             </div>
-            <div class="md:col-span-6">
-              <input type="text" v-model="form.name" class="w-full bg-white border border-gray-300 text-gray-900 px-3 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none uppercase" required />
+            <div class="md:col-span-8">
+              <input type="text" v-model="form.name" class="w-full bg-white border border-gray-300 text-gray-900 px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none uppercase" required />
             </div>
           </div>
 
@@ -25,78 +25,30 @@
             <div class="md:col-span-3 text-right">
               <label class="text-sm font-semibold text-gray-700">Reports To</label>
             </div>
-            <div class="md:col-span-6">
-              <select v-model="form.reportsTo" class="w-full bg-gray-100 border border-gray-300 text-gray-900 px-3 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none uppercase cursor-not-allowed" disabled required>
-                <option value="" disabled>Select superior role...</option>
-                <option value="Admin">Admin</option>
-                <option value="Pimpinan Sales">Pimpinan Sales</option>
-              </select>
+            <div class="md:col-span-8">
+              <input type="text" v-model="form.reportsTo" class="w-full bg-gray-100 border border-gray-300 text-gray-900 px-3 py-2 text-sm outline-none uppercase cursor-not-allowed" readonly required />
             </div>
           </div>
 
-          <!-- Privileges Table -->
-          <div class="pt-4">
-            <h3 class="text-sm font-semibold text-gray-700 mb-2">Edit privileges of this profile</h3>
-            <div class="border border-gray-300">
-              <table class="w-full divide-y divide-gray-200">
-                <thead class="bg-[#444444]">
-                  <tr>
-                    <th scope="col" class="px-4 py-2 text-left text-xs font-bold text-white flex items-center gap-2 border-r border-gray-500">
-                      <input type="checkbox" @change="toggleAllModules" :checked="isAllModulesChecked" class="rounded w-3.5 h-3.5" />
-                      Modules
-                    </th>
-                    <th scope="col" class="px-4 py-2 text-center text-xs font-bold text-white border-r border-gray-500">
-                      <div class="flex items-center justify-center gap-2">
-                        <input type="checkbox" @change="toggleAllAction('view', $event)" :checked="isAllActionChecked('view')" class="rounded w-3.5 h-3.5" /> View
-                      </div>
-                    </th>
-                    <th scope="col" class="px-4 py-2 text-center text-xs font-bold text-white border-r border-gray-500">
-                      <div class="flex items-center justify-center gap-2">
-                        <input type="checkbox" @change="toggleAllAction('create', $event)" :checked="isAllActionChecked('create')" class="rounded w-3.5 h-3.5" /> Create
-                      </div>
-                    </th>
-                    <th scope="col" class="px-4 py-2 text-center text-xs font-bold text-white border-r border-gray-500">
-                      <div class="flex items-center justify-center gap-2">
-                        <input type="checkbox" @change="toggleAllAction('edit', $event)" :checked="isAllActionChecked('edit')" class="rounded w-3.5 h-3.5" /> Edit
-                      </div>
-                    </th>
-                    <th scope="col" class="px-4 py-2 text-center text-xs font-bold text-white border-r border-gray-500">
-                      <div class="flex items-center justify-center gap-2">
-                        <input type="checkbox" @change="toggleAllAction('delete', $event)" :checked="isAllActionChecked('delete')" class="rounded w-3.5 h-3.5" /> Delete
-                      </div>
-                    </th>
-
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="mod in modulesList" :key="mod.name" class="hover:bg-gray-50">
-                    <td class="px-4 py-2 whitespace-nowrap text-xs font-medium text-gray-900 flex items-center gap-2 border-r border-gray-200">
-                      <input type="checkbox" v-model="mod.enabled" @change="handleModuleToggle(mod)" class="rounded text-blue-600 focus:ring-blue-500 border-gray-300 w-3.5 h-3.5" />
-                      {{ mod.name }}
-                    </td>
-                    <td class="px-4 py-2 whitespace-nowrap text-center border-r border-gray-200">
-                      <input type="checkbox" v-model="mod.view" :disabled="!mod.enabled" class="rounded text-blue-600 focus:ring-blue-500 border-gray-300 w-3.5 h-3.5" />
-                    </td>
-                    <td class="px-4 py-2 whitespace-nowrap text-center border-r border-gray-200">
-                      <input type="checkbox" v-model="mod.create" :disabled="!mod.enabled" class="rounded text-blue-600 focus:ring-blue-500 border-gray-300 w-3.5 h-3.5" />
-                    </td>
-                    <td class="px-4 py-2 whitespace-nowrap text-center border-r border-gray-200">
-                      <input type="checkbox" v-model="mod.edit" :disabled="!mod.enabled" class="rounded text-blue-600 focus:ring-blue-500 border-gray-300 w-3.5 h-3.5" />
-                    </td>
-                    <td class="px-4 py-2 whitespace-nowrap text-center border-r border-gray-200">
-                      <input type="checkbox" v-model="mod.delete" :disabled="!mod.enabled" class="rounded text-blue-600 focus:ring-blue-500 border-gray-300 w-3.5 h-3.5" />
-                    </td>
-
-                  </tr>
-                </tbody>
-              </table>
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+            <div class="md:col-span-3 text-right">
+              <label class="text-sm font-semibold text-gray-700">Role Profile <span class="text-red-500">*</span></label>
+            </div>
+            <div class="md:col-span-8">
+              <select v-model="form.role_profile_id" class="w-full bg-white border border-gray-300 text-gray-900 px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" required>
+                <option value="" disabled>Select Role Profile</option>
+                <option v-for="profile in roleProfiles" :key="profile.id" :value="profile.id">
+                  {{ profile.name }}
+                </option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">Users assigned to this hierarchy node will inherit permissions from this profile.</p>
             </div>
           </div>
 
           <!-- Form Actions -->
-          <div class="fixed bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-200 p-4 flex justify-center gap-4 z-20" style="margin-left: 16rem;"> <!-- Assuming 16rem sidebar -->
-            <button type="submit" class="bg-[#4CAF50] hover:bg-green-600 text-white px-8 py-1.5 text-sm font-semibold shadow-sm transition-colors rounded-sm">Save</button>
-            <button type="button" @click="$router.push('/roles')" class="text-red-500 hover:text-red-700 px-4 py-1.5 text-sm font-semibold transition-colors">Cancel</button>
+          <div class="pt-8 flex justify-center gap-4">
+            <button type="submit" class="bg-[#4CAF50] hover:bg-green-600 text-white px-8 py-2 text-sm font-semibold shadow-sm transition-colors rounded">Save</button>
+            <button type="button" @click="$router.push('/roles')" class="text-red-500 hover:text-red-700 px-4 py-2 text-sm font-semibold transition-colors">Cancel</button>
           </div>
           
         </form>
@@ -118,133 +70,119 @@ const isNewRole = computed(() => route.path.includes('/add') || !route.params.ro
 
 const form = ref({
   name: route.params.roleName || '',
-  reportsTo: route.query.reportsTo || ''
+  reportsTo: route.query.reportsTo || '',
+  role_profile_id: ''
 })
 
+const roleProfiles = ref([])
+
 onMounted(async () => {
+  try {
+    const response = await api.get('/role-profiles')
+    roleProfiles.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch role profiles:', error)
+  }
+
   if (form.value.name) {
     const roleNameUpper = form.value.name.toUpperCase();
     if (roleNameUpper === 'SALES') {
       form.value.reportsTo = 'Pimpinan Sales';
     } else if (roleNameUpper === 'PIMPINAN SALES') {
+      form.value.reportsTo = 'Director Sales'; // Fixed reports to based on updated hierarchy
+    } else if (roleNameUpper === 'DIRECTOR SALES') {
+      form.value.reportsTo = 'Director Utama';
+    } else if (roleNameUpper === 'DIRECTOR UTAMA') {
+      form.value.reportsTo = 'Admin';
+    } else if (roleNameUpper === 'VERIFICATOR') {
       form.value.reportsTo = 'Admin';
     } else if (roleNameUpper === 'ADMIN') {
-      form.value.reportsTo = 'Admin';
+      form.value.reportsTo = 'Organization';
     }
 
-    try {
-      const res = await api.get(`/roles/${form.value.name}/privileges`);
-      const menus = res.data.menus || [];
-      
-      if (menus.length > 0 && typeof menus[0] === 'object') {
-        modulesList.value.forEach(m => {
-          const savedMenu = menus.find(sm => sm.name === m.name);
-          if (savedMenu) {
-            m.enabled = true;
-            m.view = !!savedMenu.view;
-            m.create = !!savedMenu.create;
-            m.edit = !!savedMenu.edit;
-            m.delete = !!savedMenu.delete;
+    // Load from localStorage tree to see if it has a profile_id
+    const savedTree = localStorage.getItem('rolesTree_v2');
+    if (savedTree) {
+      const tree = JSON.parse(savedTree);
+      let found = false;
+      const findNode = (node, targetName) => {
+        if (node.name.toLowerCase() === targetName.toLowerCase()) {
+          if (node.role_profile_id) {
+            form.value.role_profile_id = node.role_profile_id;
+          } else {
+             // Auto map to legacy profile if matches
+             const profile = roleProfiles.value.find(p => p.name.toLowerCase() === node.name.toLowerCase())
+             if (profile) form.value.role_profile_id = profile.id;
           }
-        });
-      } else {
-        modulesList.value.forEach(m => {
-          if (menus.includes(m.name)) {
-            m.enabled = true;
-            m.view = true;
-            m.create = true;
-            m.edit = true;
-            m.delete = true;
+          found = true;
+          return;
+        }
+        if (node.children && !found) {
+          for (let child of node.children) {
+            findNode(child, targetName);
           }
-        });
+        }
       }
-    } catch (error) {
-      console.error('Error fetching privileges:', error);
+      findNode(tree, form.value.name);
     }
   }
 })
-
-const availableModules = [
-  'Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 
-  'Service Instance Account', 'Contract', 'OrderSales Logs', 
-  'User Management', 'Semua API'
-]
-
-const modulesList = ref(availableModules.map(name => ({
-  name,
-  enabled: false,
-  view: false,
-  create: false,
-  edit: false,
-  delete: false
-})))
-
-const handleModuleToggle = (mod) => {
-  if (!mod.enabled) {
-    mod.view = false;
-    mod.create = false;
-    mod.edit = false;
-    mod.delete = false;
-  } else {
-    mod.view = true;
-    mod.create = true;
-    mod.edit = true;
-    mod.delete = true;
-  }
-}
-
-const isAllModulesChecked = computed(() => {
-  return modulesList.value.length > 0 && modulesList.value.every(m => m.enabled)
-})
-
-const toggleAllModules = (e) => {
-  const isChecked = e.target.checked
-  modulesList.value.forEach(m => {
-    m.enabled = isChecked
-    m.view = isChecked
-    m.create = isChecked
-    m.edit = isChecked
-    m.delete = isChecked
-  })
-}
-
-const isAllActionChecked = (action) => {
-  return modulesList.value.length > 0 && modulesList.value.every(m => m[action])
-}
-
-const toggleAllAction = (action, e) => {
-  const isChecked = e.target.checked
-  modulesList.value.forEach(m => {
-    if (action === 'view' && isChecked) {
-      m.enabled = true
-    }
-    if (m.enabled) {
-      m[action] = isChecked
-    }
-  })
-}
 
 const saveRole = async () => {
   try {
-    const selectedMenus = modulesList.value
-      .filter(m => m.enabled)
-      .map(m => ({
-        name: m.name,
-        view: m.view,
-        create: m.create,
-        edit: m.edit,
-        delete: m.delete
-      }));
-    
-    if (form.value.name) {
-      await api.put(`/roles/${form.value.name}/privileges`, {
-        menus: selectedMenus
-      });
+    const savedTree = localStorage.getItem('rolesTree_v2');
+    if (savedTree) {
+      const tree = JSON.parse(savedTree);
+      
+      if (isNewRole.value) {
+        const addNode = (node, parentName, newNode) => {
+          if (node.name.toLowerCase() === parentName.toLowerCase()) {
+            if (!node.children) node.children = [];
+            if (!node.children.find(c => c.name.toLowerCase() === newNode.name.toLowerCase())) {
+              node.children.push(newNode);
+            }
+            return true;
+          }
+          if (node.children) {
+            for (let child of node.children) {
+              if (addNode(child, parentName, newNode)) return true;
+            }
+          }
+          return false;
+        };
+        if (form.value.reportsTo) {
+          addNode(tree, form.value.reportsTo, { 
+            name: form.value.name, 
+            role_profile_id: form.value.role_profile_id,
+            children: [] 
+          });
+        }
+      } else {
+        let found = false;
+        const updateNode = (node, targetName) => {
+          if (node.name.toLowerCase() === targetName.toLowerCase()) {
+            node.role_profile_id = form.value.role_profile_id;
+            // Name update is intentionally left out to keep tree integrity simple,
+            // but if they change name, we would update node.name = form.value.name.
+            // (Assuming form.value.name matches targetName for simplicity)
+            found = true;
+            return;
+          }
+          if (node.children && !found) {
+            for (let child of node.children) {
+              updateNode(child, targetName);
+            }
+          }
+        }
+        updateNode(tree, route.params.roleName);
+      }
+      
+      localStorage.setItem('rolesTree_v2', JSON.stringify(tree));
     }
 
     Swal.fire({
       title: 'Success!',
-      text: `Role ${form.value.name} has been ${isNewRole.value ? 'created' : 'updated'} and synced.`,
+      text: `Hierarchy node ${form.value.name} has been ${isNewRole.value ? 'created' : 'updated'}.`,
       icon: 'success',
       confirmButtonText: 'OK',
       confirmButtonColor: '#4CAF50'
@@ -252,19 +190,12 @@ const saveRole = async () => {
       router.push('/roles')
     })
   } catch (error) {
+    console.error(error)
     Swal.fire({
       title: 'Error',
-      text: 'Failed to sync role privileges',
+      text: 'Failed to update hierarchy node.',
       icon: 'error'
     })
   }
 }
 </script>
-
-<style scoped>
-/* Reset some default styles to match image */
-table th, table td {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-</style>

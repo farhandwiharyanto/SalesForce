@@ -20,33 +20,12 @@ const newUser = ref({
   username: '',
   password: '',
   role: 'sales',
+  role_profile_id: null,
   menus: []
 })
 
-const availableMenus = ['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract', 'OrderSales Logs', 'User Management', 'Semua API']
-
-const parseLegacyMenus = (menus) => {
-  if (!menus || !Array.isArray(menus)) return [];
-  return menus.map(m => {
-    if (typeof m === 'string') {
-      return { name: m, view: true, create: true, edit: true, delete: true };
-    }
-    return { ...m };
-  });
-}
-
-const roleMenus = {
-  admin: parseLegacyMenus([...availableMenus]),
-  administrator: parseLegacyMenus([...availableMenus]),
-  pimpinan_sales: parseLegacyMenus(['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract']),
-  sales: parseLegacyMenus(['Dashboard', 'Opty', 'Customers', 'Leads', 'Products', 'Service Instance Account', 'Contract'])
-}
-
-watch(() => newUser.value.role, (newRole, oldRole) => {
-  if (oldRole && newRole !== oldRole) {
-    newUser.value.menus = roleMenus[newRole] ? JSON.parse(JSON.stringify(roleMenus[newRole])) : []
-  }
-})
+const availableRoles = ref([])
+const roleProfiles = ref([])
 
 const showNotification = (message, type = 'success') => {
   notification.value = { message, type }
@@ -66,10 +45,22 @@ const fetchUsers = async () => {
   }
 }
 
+const fetchProfiles = async () => {
+  try {
+    const response = await api.get('/role-profiles')
+    roleProfiles.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch role profiles', error)
+  }
+}
+
 const openAddModal = () => {
   isEditing.value = false
   editingUserId.value = null
-  newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: 'sales', menus: JSON.parse(JSON.stringify(roleMenus['sales'])) }
+  newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: '', role_profile_id: null, menus: [] }
+  if (availableRoles.value.length > 0) {
+    newUser.value.role = availableRoles.value[0].slug;
+  }
   showModal.value = true
 }
 
@@ -83,10 +74,33 @@ const openEditModal = (user) => {
     username: user.username,
     password: '',
     role: user.role,
-    menus: user.menus && user.menus.length > 0 ? parseLegacyMenus(user.menus) : (roleMenus[user.role] ? JSON.parse(JSON.stringify(roleMenus[user.role])) : [])
+    role_profile_id: user.role_profile_id,
+    menus: user.menus
   }
   showModal.value = true
 }
+
+// Watch role change to auto-assign profile menus
+watch(() => newUser.value.role, (newRoleSlug) => {
+  const roleNode = availableRoles.value.find(r => r.slug === newRoleSlug)
+  if (roleNode && roleNode.role_profile_id) {
+    newUser.value.role_profile_id = roleNode.role_profile_id
+    const profile = roleProfiles.value.find(p => p.id === roleNode.role_profile_id)
+    if (profile) {
+      newUser.value.menus = profile.menus || []
+    }
+  } else {
+    // If no profile linked in node, we could optionally map by name
+    const profile = roleProfiles.value.find(p => p.name.toLowerCase() === (roleNode?.name.toLowerCase() || ''))
+    if (profile) {
+      newUser.value.role_profile_id = profile.id
+      newUser.value.menus = profile.menus || []
+    } else {
+      newUser.value.role_profile_id = null
+      newUser.value.menus = []
+    }
+  }
+})
 
 const saveUser = async () => {
   try {
@@ -99,7 +113,6 @@ const saveUser = async () => {
     }
     
     showModal.value = false
-    newUser.value = { first_name: '', last_name: '', email: '', username: '', password: '', role: 'sales', menus: [] }
     fetchUsers()
   } catch (error) {
     showNotification(error.response?.data?.message || 'Failed to save user', 'error')
@@ -129,8 +142,37 @@ const deleteUser = async (id) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchProfiles()
   fetchUsers()
+  
+  const savedTree = localStorage.getItem('rolesTree_v2')
+  if (savedTree) {
+    const tree = JSON.parse(savedTree)
+    const roles = []
+    const traverse = (node) => {
+      if (!node.isRoot) {
+        roles.push({
+          name: node.name,
+          slug: node.name.toLowerCase().replace(/\s+/g, '_'),
+          role_profile_id: node.role_profile_id || null
+        })
+      }
+      if (node.children) {
+        node.children.forEach(traverse)
+      }
+    }
+    traverse(tree)
+    availableRoles.value = roles
+  } else {
+    availableRoles.value = [
+      { name: 'Admin', slug: 'admin' },
+      { name: 'Pimpinan Sales', slug: 'pimpinan_sales' },
+      { name: 'Director Sales', slug: 'director_sales' },
+      { name: 'Verificator', slug: 'verificator' },
+      { name: 'Sales', slug: 'sales' }
+    ]
+  }
 })
 </script>
 
@@ -172,7 +214,7 @@ onMounted(() => {
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Email</th>
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Role</th>
               <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ User Name</th>
-              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Admin</th>
+              <th class="py-4 px-6 text-left text-xs font-extrabold text-gray-400 tracking-widest cursor-pointer hover:text-gray-600">⬍ Action</th>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr v-for="user in users" :key="user.id" class="group hover:bg-gray-50/50 transition-colors">
@@ -195,8 +237,14 @@ onMounted(() => {
               <td class="py-2 px-6">
                 <span class="text-gray-700 text-[13px] uppercase">{{ user.username }}</span>
               </td>
-              <td class="py-2 px-6">
-                <span class="text-gray-700 text-[13px]">{{ user.role === 'admin' ? 'Yes' : 'No' }}</span>
+              <td class="py-2 px-6 flex items-center gap-3">
+                <button @click="openEditModal(user)" class="text-blue-600 hover:text-blue-800 text-[13px] font-semibold flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                  Edit
+                </button>
+                <button @click="deleteUser(user.id)" class="text-red-500 hover:text-red-700 text-[13px] font-semibold flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -204,10 +252,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Add User Modal -->
+    <!-- Add/Edit User Modal -->
     <transition name="fade">
       <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl flex flex-col max-h-[95vh] overflow-hidden transform transition-all animate-modal-in border border-white/40 relative">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl flex flex-col overflow-hidden transform transition-all animate-modal-in border border-white/40 relative">
           
           <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 flex justify-between items-center relative overflow-hidden shrink-0">
             <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
@@ -218,7 +266,7 @@ onMounted(() => {
           </div>
 
           <form @submit.prevent="saveUser" class="flex flex-col flex-1 overflow-hidden">
-            <div class="p-8 overflow-y-auto space-y-5">
+            <div class="p-8 space-y-5">
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">First Name</label>
@@ -242,12 +290,12 @@ onMounted(() => {
               
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Role</label>
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Hierarchy Role</label>
                   <select v-model="newUser.role" class="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none appearance-none cursor-pointer">
-                    <option value="sales">Sales</option>
-                    <option value="pimpinan_sales">Pimpinan Sales</option>
-                    <option value="administrator">Administrator</option>
-                    <option value="admin">Admin</option>
+                    <option value="" disabled v-if="!newUser.role">Select a role</option>
+                    <option v-for="role in availableRoles" :key="role.slug" :value="role.slug">
+                      {{ role.name }}
+                    </option>
                   </select>
                 </div>
                 <div>
@@ -255,48 +303,6 @@ onMounted(() => {
                     Password <span v-if="isEditing" class="text-gray-400 font-normal normal-case">(Leave blank to keep current)</span>
                   </label>
                   <input type="password" v-model="newUser.password" :required="!isEditing" placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none" />
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Menu Access Permissions</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <div v-for="menu in availableMenus" :key="menu" class="p-3 bg-gray-50 border border-transparent hover:border-blue-200 rounded-xl transition-all shadow-sm flex flex-col justify-center">
-                    <label class="flex items-center gap-3 cursor-pointer group">
-                      <input 
-                        type="checkbox" 
-                        :checked="newUser.menus.some(m => m.name === menu)"
-                        @change="(e) => {
-                          if (e.target.checked) {
-                            newUser.menus.push({ name: menu, view: true, create: true, edit: true, delete: true });
-                          } else {
-                            newUser.menus = newUser.menus.filter(m => m.name !== menu);
-                          }
-                        }"
-                        class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 accent-blue-600" 
-                      />
-                      <span class="font-bold text-gray-700 group-hover:text-blue-800 text-sm">{{ menu }}</span>
-                    </label>
-                    
-                    <div v-if="newUser.menus.some(m => m.name === menu)" class="mt-3 grid grid-cols-2 gap-2 pl-8 border-t border-gray-200 pt-2">
-                      <label class="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" v-model="newUser.menus.find(m => m.name === menu).view" class="w-3.5 h-3.5 text-blue-600 rounded" />
-                        <span class="text-xs text-gray-500 font-medium">View</span>
-                      </label>
-                      <label class="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" v-model="newUser.menus.find(m => m.name === menu).create" class="w-3.5 h-3.5 text-blue-600 rounded" />
-                        <span class="text-xs text-gray-500 font-medium">Create</span>
-                      </label>
-                      <label class="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" v-model="newUser.menus.find(m => m.name === menu).edit" class="w-3.5 h-3.5 text-blue-600 rounded" />
-                        <span class="text-xs text-gray-500 font-medium">Edit</span>
-                      </label>
-                      <label class="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" v-model="newUser.menus.find(m => m.name === menu).delete" class="w-3.5 h-3.5 text-blue-600 rounded" />
-                        <span class="text-xs text-gray-500 font-medium">Delete</span>
-                      </label>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -316,51 +322,34 @@ onMounted(() => {
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .animate-modal-in {
   animation: modalScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
 @keyframes modalScale {
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
-
-.slide-down-enter-active,
-.slide-down-leave-active {
+.slide-down-enter-active, .slide-down-leave-active {
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-
-.slide-down-enter-from,
-.slide-down-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
+.slide-down-enter-from, .slide-down-leave-to {
+  opacity: 0; transform: translateY(-20px);
 }
-
-.fade-enter-active,
-.fade-leave-active {
+.fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s;
 }
-
-.fade-enter-from,
-.fade-leave-to {
+.fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
-
 .loader-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
+  width: 40px; height: 40px; border: 4px solid #f3f3f3;
+  border-top: 4px solid #3b82f6; border-radius: 50%;
   animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }

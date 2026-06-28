@@ -65,8 +65,28 @@ class ActivityController extends Controller
             ];
         }
 
-        // Users (only admin sees users in activities, let's just let everyone see it or leave it)
-        $users = \App\Models\User::orderBy('created_at', 'desc')->limit(10)->get();
+        // Opty Histories (for steps and approvals)
+        $optyHistories = \App\Models\OptyHistory::with('opty')->orderBy('created_at', 'desc')->limit(15)->get();
+        foreach ($optyHistories as $history) {
+            $activities[] = [
+                'id' => 'history_' . $history->id,
+                'type' => 'Opty Update',
+                'title' => 'Opty Activity: ' . ($history->opty->opportunity_number ?? 'Unknown Opty'),
+                'description' => $history->description,
+                'date' => $history->created_at,
+                'color' => 'pink',
+            ];
+        }
+
+        // Users
+        $userQuery = \App\Models\User::orderBy('created_at', 'desc')->limit(10);
+        $currentUser = request()->user();
+        
+        if ($currentUser && $currentUser->role === 'pimpinan_sales') {
+            $userQuery->where('manager_id', $currentUser->id);
+        }
+        
+        $users = $userQuery->get();
         foreach ($users as $user) {
             $activities[] = [
                 'id' => 'user_' . $user->id,

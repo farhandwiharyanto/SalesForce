@@ -106,9 +106,12 @@
                 {{ customer.status || 'Registered' }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap flex gap-2 items-center">
               <button v-if="authStore.hasAction('Customers', 'edit') && (authStore.user?.role === 'admin' || authStore.user?.role === 'administrator' || customer.owner_id === authStore.user?.id)" @click="openEditCustomer(customer)" class="text-blue-600 hover:text-blue-800 font-bold text-sm bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">
                 Edit
+              </button>
+              <button @click="openHistoryModal(customer)" class="text-gray-600 hover:text-gray-800 font-bold text-sm bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                History
               </button>
             </td>
           </tr>
@@ -134,6 +137,14 @@
       @import-success="onImportSuccess"
       @import-error="onImportError"
     />
+
+    <HistoryModal
+      :show="showHistoryModal"
+      :title="historyTitle"
+      :is-loading="isLoadingHistory"
+      :histories="histories"
+      @close="showHistoryModal = false"
+    />
   </div>
 </template>
 
@@ -142,6 +153,7 @@ import { ref, onMounted } from 'vue';
 import api from '../api/axios';
 import { useAuthStore } from '../stores/auth';
 import ImportModal from '../components/ImportModal.vue';
+import HistoryModal from '../components/HistoryModal.vue';
 import Swal from 'sweetalert2';
 
 const authStore = useAuthStore();
@@ -151,6 +163,26 @@ const showCreateForm = ref(false);
 const showEditForm = ref(false);
 const notification = ref(null);
 const showImportModal = ref(false);
+
+const showHistoryModal = ref(false);
+const isLoadingHistory = ref(false);
+const histories = ref([]);
+const historyTitle = ref('Customer History');
+
+const openHistoryModal = async (customer) => {
+  historyTitle.value = `History: ${customer.customer_name}`;
+  showHistoryModal.value = true;
+  isLoadingHistory.value = true;
+  histories.value = [];
+  try {
+    const response = await api.get(`/audit-logs/customer/${customer.id}`);
+    histories.value = response.data;
+  } catch (error) {
+    console.error('Failed to fetch history', error);
+  } finally {
+    isLoadingHistory.value = false;
+  }
+};
 
 const showNotification = (msg, type = 'success') => {
   notification.value = { message: msg, type };

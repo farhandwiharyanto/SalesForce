@@ -14,10 +14,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import RoleNode from '../components/RoleNode.vue';
 
-const rolesTree = ref({
+const defaultTree = {
   name: 'Organization',
   isRoot: true,
   children: [
@@ -25,15 +25,39 @@ const rolesTree = ref({
       name: 'Admin',
       children: [
         {
-          name: 'Pimpinan Sales',
+          name: 'Verificator'
+        },
+        {
+          name: 'Director Utama',
           children: [
             {
-              name: 'Sales'
+              name: 'Director Sales',
+              children: [
+                {
+                  name: 'Pimpinan Sales',
+                  children: [
+                    {
+                      name: 'Sales'
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
       ]
     }
   ]
+};
+
+const rolesTree = ref(defaultTree);
+
+onMounted(() => {
+  const savedTree = localStorage.getItem('rolesTree_v2');
+  if (savedTree) {
+    rolesTree.value = JSON.parse(savedTree);
+  } else {
+    localStorage.setItem('rolesTree_v2', JSON.stringify(rolesTree.value));
+  }
 });
 </script>

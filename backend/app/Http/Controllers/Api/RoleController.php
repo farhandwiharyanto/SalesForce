@@ -34,4 +34,14 @@ class RoleController extends Controller
         
         return response()->json(['message' => 'Role privileges synced successfully']);
     }
+
+    public function removeFromUsers($roleName)
+    {
+        $roleSlug = str_replace('-', '_', Str::slug($roleName));
+        User::where('role', $roleSlug)->update([
+            'role' => null
+        ]);
+
+        return response()->json(['message' => 'Role removed from all users']);
+    }
 }

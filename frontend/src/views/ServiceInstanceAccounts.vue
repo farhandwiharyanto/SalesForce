@@ -53,8 +53,8 @@
                       :class="{
                         'bg-blue-50 text-blue-700 border border-blue-200': contract.status === 'Registered',
                         'bg-green-50 text-green-700 border border-green-200': contract.status === 'Active',
-                        'bg-red-50 text-red-700 border border-red-200': contract.status === 'Suspend Permanend',
-                        'bg-gray-50 text-gray-700 border border-gray-200': !['Registered', 'Active', 'Suspend Permanend'].includes(contract.status)
+                        'bg-red-50 text-red-700 border border-red-200': contract.status === 'Isolir',
+                        'bg-gray-50 text-gray-700 border border-gray-200': !['Registered', 'Active', 'Isolir'].includes(contract.status)
                       }">
                   {{ contract.status }}
                 </span>

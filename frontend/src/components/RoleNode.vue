@@ -60,11 +60,49 @@ const addRole = () => {
 const deleteRole = () => {
   Swal.fire({
     title: 'Delete Role',
-    text: `Are you sure you want to delete ${props.node.name}? (Simulation)`,
+    text: `Apakah benar anda ingin menghapus role ${props.node.name} ini?`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#ef4444',
     confirmButtonText: 'Delete'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const savedTree = localStorage.getItem('rolesTree_v2');
+      if (savedTree) {
+        const tree = JSON.parse(savedTree);
+        const removeNode = (node, targetName) => {
+          if (node.children) {
+            const idx = node.children.findIndex(c => c.name === targetName);
+            if (idx !== -1) {
+              node.children.splice(idx, 1);
+              return true;
+            }
+            for (let child of node.children) {
+              if (removeNode(child, targetName)) return true;
+            }
+          }
+          return false;
+        };
+        removeNode(tree, props.node.name);
+        localStorage.setItem('rolesTree_v2', JSON.stringify(tree));
+        
+        // Call backend API to nullify role for users
+        try {
+          // The API endpoint handles this
+          await fetch(`http://localhost:8000/api/roles/${props.node.name}/remove-from-users`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+            }
+          });
+        } catch(e) {
+            console.error(e)
+        }
+
+        window.location.reload();
+      }
+    }
   })
 }
 </script>

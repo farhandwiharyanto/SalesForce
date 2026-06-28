@@ -26,7 +26,13 @@ class Opty extends Model
         'estimated_value_mrc',
         'discount_amount',
         'discount_status',
-        'is_converted_from_lead'
+        'is_converted_from_lead',
+        'contract_id',
+        'contract_document_path',
+        'pimpinan_approval_status',
+        'director_approval_status',
+        'verificator_approval_status',
+        'rejection_note'
     ];
 
     protected $casts = [
@@ -63,5 +69,10 @@ class Opty extends Model
     public function serviceInstanceAccount()
     {
         return $this->hasOne(ServiceInstanceAccount::class, 'deal_id');
+    }
+
+    public function contract()
+    {
+        return $this->belongsTo(Contract::class);
     }
 }
