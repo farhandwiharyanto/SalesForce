@@ -8,13 +8,15 @@ Route::get('/', function () {
 });
 
 Route::get('/migrate-now-secret', function () {
+    // Prevent Laravel from trying to save session to DB after tables are dropped
+    config(['session.driver' => 'array']);
+
     try {
         Artisan::call('migrate:fresh', ['--force' => true]);
         Artisan::call('db:seed', ['--class' => 'RoleProfileSeeder', '--force' => true]);
         return "Migration Fresh and seeding successful! Output: " . Artisan::output();
     } catch (\Throwable $e) {
-        return "Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . 
-               "<br>DB_HOST: " . env('DB_HOST') . 
-               "<br>APP_KEY set? " . (env('APP_KEY') ? 'Yes' : 'No');
+        return "Error during migration: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . 
+               "<br>Output before error: " . Artisan::output();
     }
 });
